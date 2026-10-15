@@ -1,0 +1,4560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pocket Ledger &mdash; Shake-to-Log Expense Tracker</title>
+
+  <!-- PWA Meta -->
+  <meta name="description" content="Mobile-first ledger that syncs directly with Google Sheets. Shake or tap to log expenses instantly.">
+  <meta name="theme-color" content="#f9f6ef">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Pocket Ledger">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Styles -->
+  <style>
+/* ==========================================================================
+   Pocket Ledger - Tactile Ledger & Mobile-First PWA Stylesheet
+   Optimized for Samsung Galaxy S24 & Modern Mobile Browsers
+   ========================================================================== */
+
+:root {
+  /* Warm Paper & Ledger Palette */
+  --bg-parchment: #f9f6ef;
+  --bg-card: #ffffff;
+  --bg-card-warm: #fdfbf7;
+  --bg-ledger-row: #f4ede2;
+  --border-ruling: #e4dac8;
+  --border-dark: #3a322d;
+
+  /* Ink & Typography */
+  --ink-primary: #211c19;
+  --ink-secondary: #6e645c;
+  --ink-muted: #9c9186;
+
+  /* Transaction Colors */
+  --color-expense: #c74528;
+  --color-expense-bg: #faece8;
+  --color-expense-border: #f0c2b7;
+  --color-income: #267c54;
+  --color-income-bg: #eaf5ee;
+  --color-income-border: #b3dfc6;
+
+  /* Accent & Brass */
+  --accent-brass: #b8860b;
+  --accent-gold-light: #fef5e4;
+
+  /* Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Courier New", Courier, "Liberation Mono", monospace;
+
+  /* Sizing & Safe Areas */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --safe-top: env(safe-area-inset-top, 16px);
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #ede5d8;
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.4;
+  overflow: hidden; /* Prevent body scroll so app-container manages viewport exactly */
+}
+
+/* App Container (Phone-sized view on desktop, full-width on mobile) */
+.app-container {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  height: 100dvh;
+  margin: 0 auto;
+  background-color: var(--bg-parchment);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--border-ruling);
+  border-right: 1px solid var(--border-ruling);
+  overflow: hidden; /* Contains all screens cleanly */
+}
+
+/* Top App Bar */
+.top-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: max(12px, var(--safe-top));
+  border-bottom: 2px solid var(--border-ruling);
+  background-color: var(--bg-card-warm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  font-size: 1.25rem;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+}
+
+.status-pill.online {
+  color: var(--color-income);
+  background-color: var(--color-income-bg);
+}
+
+.status-pill.offline {
+  color: var(--color-expense);
+  background-color: var(--color-expense-bg);
+}
+
+.status-pill.queue-badge {
+  color: var(--accent-brass);
+  background-color: var(--accent-gold-light);
+  border-color: #d6ab53;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, background-color 0.15s;
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+  background-color: var(--bg-ledger-row);
+}
+
+/* First Run / Setup Banner */
+.notice-banner {
+  background-color: #fff9e6;
+  border-bottom: 1px solid #ecc94b;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: #744210;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #b7791f;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+/* Screen Management */
+.screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0; /* Critical: allows flex child to shrink and scroll */
+  padding: 14px 16px;
+  padding-bottom: 6px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: fadeIn 0.18s ease-out;
+  position: relative;
+}
+
+.screen.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Screen Header */
+.screen-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(10px, 1.8vh, 18px);
+}
+
+.step-indicator {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.btn-ghost {
+  background: none;
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-ghost:active {
+  background-color: var(--border-ruling);
+}
+
+.btn-ghost-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-brass);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-ghost-sm:active {
+  background: var(--border-ruling);
+}
+
+.btn-ghost-sm.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.btn-ghost-sm.loading .sync-icon {
+  display: inline-block;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.cat-sync-toast {
+  font-size: 0.82rem;
+  padding: 7px 12px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: fadeIn 0.2s ease-out;
+  line-height: 1.35;
+}
+
+.cat-sync-toast.success {
+  background: var(--color-income-bg);
+  color: var(--color-income);
+  border: 1px solid var(--color-income-border);
+}
+
+.cat-sync-toast.error {
+  background: var(--color-expense-bg);
+  color: var(--color-expense);
+  border: 1px solid var(--color-expense-border);
+}
+
+/* ==========================================================================
+   Home Screen
+   ========================================================================== */
+.home-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+/* Ledger Summary Paper Slip */
+.ledger-slip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(45, 35, 25, 0.05);
+  position: relative;
+}
+
+.ledger-slip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--border-ruling) 0, var(--border-ruling) 6px, transparent 6px, transparent 12px);
+}
+
+.slip-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+}
+
+.slip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-ruling);
+}
+
+.slip-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.slip-label {
+  font-size: 0.95rem;
+  color: var(--ink-secondary);
+  font-weight: 500;
+}
+
+.slip-amount {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-expense);
+}
+
+/* Big Hero Action */
+.hero-action-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 0;
+  gap: 12px;
+}
+
+.btn-hero {
+  width: 100%;
+  min-height: 84px;
+  background: var(--ink-primary);
+  color: #fff;
+  border: 2px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-shadow: 0 6px 18px rgba(33, 28, 25, 0.25);
+  transition: transform 0.08s, box-shadow 0.08s, background-color 0.1s;
+}
+
+.btn-hero:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(33, 28, 25, 0.2);
+}
+
+.hero-icon {
+  font-size: 1.8rem;
+}
+
+.shake-hint-pill {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background-color: var(--bg-ledger-row);
+  border: 1px solid var(--border-ruling);
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Frequent Items Section */
+.frequent-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.section-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background-color: var(--bg-ledger-row);
+  border: 1px solid var(--border-ruling);
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  cursor: pointer;
+  transition: background-color 0.12s, transform 0.08s;
+}
+
+.chip:active {
+  background-color: #e5dac7;
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   Step 1: Amount Screen & Numpad
+   ========================================================================== */
+.amount-display-box {
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 2px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  padding: clamp(8px, 1.8vh, 18px) 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.currency-symbol {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 3.5vh, 2.2rem);
+  font-weight: 700;
+  color: var(--ink-secondary);
+  margin-right: 6px;
+}
+
+.amount-value {
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 5vh, 2.85rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--ink-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount-value.placeholder {
+  color: #b5aba0;
+}
+
+.shake-field {
+  animation: shakeX 0.4s ease-in-out;
+  border-color: var(--color-expense) !important;
+}
+
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.input-error {
+  flex-shrink: 0;
+  color: var(--color-expense);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Preset Buttons (+5, +10, +20, +50) */
+.presets-bar {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+}
+
+.preset-btn {
+  background-color: var(--bg-card-warm);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  padding: clamp(5px, 1vh, 8px) 4px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.preset-btn:active {
+  background-color: var(--border-ruling);
+}
+
+/* On-Screen Keypad */
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(6px, 1.1vh, 10px);
+  margin-top: auto;
+  margin-bottom: clamp(6px, 1.3vh, 12px);
+  flex-shrink: 1;
+}
+
+.keypad-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  height: clamp(40px, 6.4vh, 56px);
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 3.2vh, 1.55rem);
+  font-weight: 700;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: transform 0.06s, background-color 0.08s;
+}
+
+.keypad-btn:active {
+  background-color: var(--bg-ledger-row);
+  transform: scale(0.94);
+}
+
+.keypad-btn.action-key {
+  font-size: 1.25rem;
+  color: var(--ink-secondary);
+  background-color: var(--bg-card-warm);
+}
+
+/* Bottom Actions - Sticky above browser navigation bar */
+.bottom-action-bar {
+  margin-top: auto;
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: linear-gradient(to top, var(--bg-parchment) 85%, rgba(249, 246, 239, 0));
+  padding-top: 8px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+}
+
+.btn-primary {
+  flex: 1;
+  min-height: clamp(44px, 6vh, 52px);
+  background-color: var(--ink-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(33, 28, 25, 0.2);
+  transition: transform 0.08s, background-color 0.12s;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile Browser Height Optimizations (< 720px) */
+@media (max-height: 720px) {
+  .top-bar {
+    padding: 8px 14px;
+  }
+  .screen {
+    padding: 8px 12px;
+  }
+  .screen-header {
+    margin-bottom: 6px;
+  }
+  .amount-display-box {
+    padding: 6px 12px;
+    margin-bottom: 6px;
+  }
+  .presets-bar {
+    margin-bottom: 6px;
+  }
+  .numpad-grid {
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+  .keypad-btn {
+    height: clamp(38px, 6vh, 46px);
+    font-size: 1.25rem;
+  }
+  .bottom-action-bar {
+    padding-top: 4px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+  .btn-primary {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   Step 2: Category Grid
+   ========================================================================== */
+.category-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+}
+
+.category-btn {
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  min-height: 52px;
+  padding: 10px 12px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  transition: transform 0.08s, border-color 0.12s, background-color 0.12s;
+}
+
+.category-btn:active {
+  transform: scale(0.96);
+  background-color: var(--bg-ledger-row);
+}
+
+.category-btn.selected {
+  border-color: var(--ink-primary);
+  background-color: var(--bg-ledger-row);
+  box-shadow: 0 0 0 1px var(--ink-primary);
+}
+
+.cat-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+/* ==========================================================================
+   Step 3: Type Selection
+   ========================================================================== */
+.type-selection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.type-card-btn {
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: clamp(14px, 2.5vh, 20px) 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.08s, border-color 0.15s, background-color 0.15s;
+}
+
+.type-card-btn:active {
+  transform: scale(0.98);
+}
+
+.type-card-btn.expense.active {
+  border-color: var(--color-expense);
+  background-color: var(--color-expense-bg);
+}
+
+.type-card-btn.income.active {
+  border-color: var(--color-income);
+  background-color: var(--color-income-bg);
+}
+
+.type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.type-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-card-btn.expense .type-title {
+  color: var(--color-expense);
+}
+
+.type-card-btn.income .type-title {
+  color: var(--color-income);
+}
+
+.type-desc {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.type-badge-default {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #f1cfc8;
+  color: var(--color-expense);
+}
+
+.type-check {
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.type-card-btn.active .type-check {
+  opacity: 1;
+}
+
+.selection-hint {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   Step 4: Remark / Description
+   ========================================================================== */
+.remark-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.input-box {
+  background: var(--bg-card);
+  border: 2px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.input-box:focus-within {
+  border-color: var(--ink-primary);
+}
+
+.text-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--ink-primary);
+  background: transparent;
+  user-select: text;
+}
+
+.text-input::placeholder {
+  color: var(--ink-muted);
+}
+
+/* ==========================================================================
+   Step 5: Review & Send (Tactile Paper Receipt)
+   ========================================================================== */
+.receipt-wrapper {
+  perspective: 1000px;
+  margin-bottom: 20px;
+}
+
+.receipt-ticket {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+  position: relative;
+  overflow: hidden;
+  padding: 24px 20px;
+}
+
+/* Perforated Sawtooth Edges */
+.receipt-ticket::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: radial-gradient(circle, transparent, transparent 50%, var(--bg-card) 50%, var(--bg-card) 100%);
+  background-size: 14px 14px;
+}
+
+.receipt-ticket::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: radial-gradient(circle, transparent, transparent 50%, var(--bg-card) 50%, var(--bg-card) 100%);
+  background-size: 14px 14px;
+}
+
+.receipt-header {
+  text-align: center;
+  border-bottom: 1px dashed var(--border-ruling);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+.receipt-store-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.receipt-sub {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+
+.receipt-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid #f4ede2;
+  cursor: pointer;
+}
+
+.receipt-line:hover {
+  background-color: var(--bg-card-warm);
+}
+
+.receipt-field-name {
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-field-value {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink-primary);
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receipt-type-pill {
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.receipt-type-pill.expense {
+  background-color: var(--color-expense-bg);
+  color: var(--color-expense);
+}
+
+.receipt-type-pill.income {
+  background-color: var(--color-income-bg);
+  color: var(--color-income);
+}
+
+.empty-remark {
+  color: var(--ink-muted);
+  font-style: italic;
+  font-weight: normal;
+}
+
+.receipt-total-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px solid var(--border-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.receipt-total-label {
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.receipt-amount {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.receipt-amount.expense {
+  color: var(--color-expense);
+}
+
+.receipt-amount.income {
+  color: var(--color-income);
+}
+
+/* Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Success & Undo Screen
+   ========================================================================== */
+.success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  margin: auto 0;
+  padding: 20px 0;
+}
+
+/* Rubber Stamp Styling */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border: 4px double currentColor;
+  border-radius: 8px;
+  transform: rotate(-6deg);
+  opacity: 0.95;
+  box-shadow: 0 0 0 2px transparent;
+  animation: stampPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes stampPop {
+  0% { transform: scale(2.2) rotate(8deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-6deg); opacity: 0.95; }
+}
+
+.stamp.logged {
+  color: var(--color-expense);
+}
+
+.stamp.queued {
+  color: var(--accent-brass);
+}
+
+.success-headline {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+
+.success-details {
+  font-size: 0.95rem;
+  color: var(--ink-secondary);
+  background: var(--bg-card);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-ruling);
+}
+
+/* Undo Widget */
+.undo-box {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.undo-progress-track {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-ledger-row);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.undo-progress-fill {
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-expense);
+  transition: width 0.05s linear;
+}
+
+.btn-undo {
+  background-color: var(--bg-card-warm);
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  cursor: pointer;
+}
+
+.btn-undo:active {
+  background-color: var(--border-ruling);
+}
+
+/* ==========================================================================
+   Settings Screen
+   ========================================================================== */
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 24px;
+}
+
+.settings-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--ink-primary);
+  user-select: text;
+}
+
+.settings-input:focus {
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 10px;
+  background-color: var(--bg-ledger-row);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+}
+
+.btn-secondary:active {
+  background-color: #e5dac7;
+}
+
+.status-msg {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.status-msg.success { color: var(--color-income); }
+.status-msg.error { color: var(--color-expense); }
+.status-msg.info { color: var(--ink-secondary); }
+
+/* Category Editor Rows */
+.settings-categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  background: var(--bg-card-warm);
+}
+
+.settings-cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+}
+
+.cat-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.cat-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border-ruling);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-delete {
+  color: var(--color-expense);
+}
+
+/* Offline Queue Cards */
+.queue-item-card {
+  background: var(--bg-card-warm);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.queue-card-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.queue-card-amt.expense { color: var(--color-expense); }
+.queue-card-amt.income { color: var(--color-income); }
+
+.queue-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-secondary);
+  font-size: 0.8rem;
+}
+
+.queue-card-error {
+  color: var(--color-expense);
+  font-size: 0.78rem;
+  margin-top: 4px;
+}
+
+.queue-empty-msg {
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.88rem;
+  padding: 12px 0;
+}
+
+/* Select Dropdown */
+.settings-select {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid var(--border-ruling);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--ink-primary);
+}
+
+/* Accessibility & Print */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Recent Ledger Activity Feed & Home Quick Categories */
+.ledger-history-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-ruling);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.ledger-item-row {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-ruling);
+}
+
+.ledger-item-row:last-child {
+  border-bottom: none;
+}
+
+.empty-ledger-box {
+  text-align: center;
+  padding: 24px 12px;
+  background: var(--bg-card-warm);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-ruling);
+}
+
+.quick-cats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.quick-cat-btn {
+  background: var(--bg-card-warm);
+  border: 1px solid var(--border-ruling);
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  cursor: pointer;
+}
+
+.quick-cat-btn:active {
+  background: var(--border-ruling);
+}
+
+/* PWA Install UI & Guide Modal */
+.install-btn {
+  background: #eef5ea;
+  border: 1px solid #7cb382;
+  color: #205c2a;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 20px;
+  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.1s, background-color 0.12s;
+}
+
+.install-btn:active {
+  transform: scale(0.94);
+  background: #dbeef0;
+}
+
+.pwa-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff8e8;
+  border-bottom: 1.5px solid #d4b882;
+  padding: 10px 14px;
+  gap: 10px;
+}
+
+.pwa-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-banner-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.pwa-banner-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pwa-banner-text strong {
+  font-size: 0.88rem;
+  color: var(--ink-primary);
+  line-height: 1.2;
+}
+
+.pwa-banner-text span {
+  font-size: 0.74rem;
+  color: var(--ink-secondary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-btn-install {
+  background: var(--ink-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pwa-btn-install:active {
+  transform: scale(0.95);
+}
+
+.pwa-btn-dismiss {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(33, 28, 25, 0.7);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: 440px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1.5px solid var(--border-ruling);
+  padding-bottom: 8px;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+
+.instruction-tab-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.instruction-tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-ruling);
+  background: var(--bg-card-warm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.instruction-tab-btn.active {
+  background: var(--ink-primary);
+  color: #fff;
+  border-color: var(--ink-primary);
+}
+
+.instruction-step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  align-items: flex-start;
+}
+
+.step-num {
+  background: var(--bg-ledger-row);
+  border: 1px solid var(--border-ruling);
+  color: var(--ink-primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-text {
+  font-size: 0.88rem;
+  color: var(--ink-primary);
+  line-height: 1.35;
+}
+
+.step-text strong {
+  color: var(--ink-primary);
+}
+
+</style>
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Top App Bar -->
+    <header class="top-bar">
+      <div class="brand-title">
+        <span class="brand-icon">&#128211;</span>
+        <span>Pocket Ledger</span>
+      </div>
+      <div class="top-bar-actions">
+        <span id="queue-count-badge" class="status-pill queue-badge" style="display: none;">0 queued</span>
+        <span id="network-status-badge" class="status-pill online">ONLINE</span>
+        <button type="button" id="btn-open-settings" class="icon-btn" aria-label="Settings" title="Settings">&#9881;&#65039;</button>
+      </div>
+    </header>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
+      <div class="pwa-banner-content">
+        <div class="pwa-banner-icon">&#128242;</div>
+        <div class="pwa-banner-text">
+          <strong>Install Pocket Ledger</strong>
+          <span>Add to phone home screen for full-screen & offline access</span>
+        </div>
+      </div>
+      <div class="pwa-banner-actions">
+        <button type="button" id="btn-banner-install" class="pwa-btn-install">Install</button>
+        <button type="button" id="btn-banner-dismiss" class="pwa-btn-dismiss" title="Dismiss">&#10005;</button>
+      </div>
+    </div>
+
+    <!-- First Run Notice Banner -->
+    <div id="first-run-banner" class="notice-banner" style="display: none;">
+      <span>Connect your Google Apps Script URL to sync entries directly.</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" id="btn-configure-gas" class="btn-link">Setup</button>
+        <button type="button" onclick="document.getElementById('first-run-banner').style.display='none'" class="pwa-btn-dismiss" title="Dismiss" style="font-size: 0.9rem; padding: 2px 4px;">&#10005;</button>
+      </div>
+    </div>
+
+    <!-- MAIN APP SCREENS -->
+
+    <!-- SCREEN 0: HOME -->
+    <main id="screen-home" class="screen active">
+      <div class="home-content">
+
+        <!-- Ledger Summary Paper Slip -->
+        <div class="ledger-slip">
+          <div class="slip-title">Local Running Balance</div>
+          <div class="slip-row">
+            <span class="slip-label">Today's Expenses</span>
+            <span id="today-total" class="slip-amount">$0.00</span>
+          </div>
+          <div class="slip-row">
+            <span class="slip-label">This Month's Expenses</span>
+            <span id="month-total" class="slip-amount">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Hero Shake / Log Button -->
+        <div class="hero-action-section">
+          <button type="button" id="btn-start-log" class="btn-hero" aria-label="Log an expense or income">
+            <span class="hero-icon">&#9889;</span>
+            <span>LOG ENTRY</span>
+          </button>
+          <div id="shake-hint-badge" class="shake-hint-pill">
+            <span class="shake-icon">&#128241;</span>
+            <span>Shake phone or tap to log</span>
+          </div>
+        </div>
+
+        <!-- Quick Category Shortcuts -->
+        <div class="frequent-section">
+          <div class="section-label">Quick Category Shortcuts</div>
+          <div id="home-quick-cats-container" class="quick-cats-bar">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Frequent / Recent Items Quick Picks -->
+        <div id="home-frequent-section" class="frequent-section" style="display: none;">
+          <div class="section-label">Frequent Items</div>
+          <div id="home-frequent-chips" class="chips-container">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Recent Ledger Receipts Activity Feed -->
+        <div class="ledger-history-section">
+          <div class="section-label" style="display: flex; justify-content: space-between;">
+            <span>Recent Activity</span>
+            <span style="font-weight: 600; color: var(--ink-muted); text-transform: none; font-size: 0.75rem;">Session Entries</span>
+          </div>
+          <div id="home-recent-entries-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- SCREEN 1: AMOUNT -->
+    <section id="screen-amount" class="screen" aria-label="Step 1: Enter Amount">
+      <div class="screen-header">
+        <span class="step-indicator">Step 1 of 4 &bull; Amount</span>
+        <button type="button" class="btn-ghost" data-back="home">Cancel</button>
+      </div>
+
+      <div class="amount-display-box">
+        <span id="amount-currency-symbol" class="currency-symbol">$</span>
+        <span id="amount-display-value" class="amount-value placeholder">0.00</span>
+      </div>
+
+      <div id="amount-error-msg" class="input-error" style="display: none;">
+        Please enter an amount greater than 0.
+      </div>
+
+      <!-- Quick Add Presets -->
+      <div class="presets-bar">
+        <button type="button" class="preset-btn" data-add="5">+5</button>
+        <button type="button" class="preset-btn" data-add="10">+10</button>
+        <button type="button" class="preset-btn" data-add="20">+20</button>
+        <button type="button" class="preset-btn" data-add="50">+50</button>
+      </div>
+
+      <!-- Tactile Thumb Keypad -->
+      <div id="numpad-container" class="numpad-grid">
+        <button type="button" class="keypad-btn" data-key="1">1</button>
+        <button type="button" class="keypad-btn" data-key="2">2</button>
+        <button type="button" class="keypad-btn" data-key="3">3</button>
+        <button type="button" class="keypad-btn" data-key="4">4</button>
+        <button type="button" class="keypad-btn" data-key="5">5</button>
+        <button type="button" class="keypad-btn" data-key="6">6</button>
+        <button type="button" class="keypad-btn" data-key="7">7</button>
+        <button type="button" class="keypad-btn" data-key="8">8</button>
+        <button type="button" class="keypad-btn" data-key="9">9</button>
+        <button type="button" class="keypad-btn action-key" data-key=".">.</button>
+        <button type="button" class="keypad-btn" data-key="0">0</button>
+        <button type="button" class="keypad-btn action-key" data-key="backspace" aria-label="Backspace">&#9003;</button>
+      </div>
+
+      <div class="bottom-action-bar">
+        <button type="button" id="btn-amount-next" class="btn-primary">
+          <span>Next: Category</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: CATEGORY -->
+    <section id="screen-category" class="screen" aria-label="Step 2: Choose Category">
+      <div class="screen-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="step-indicator">Step 2 of 4 &bull; Category</span>
+          <button type="button" id="btn-quick-sync-cats" class="btn-ghost-sm" title="Refresh categories from Google Sheet">
+            <span class="sync-icon">&#x21bb;</span>
+            <span class="sync-text">Sync</span>
+          </button>
+        </div>
+        <button type="button" class="btn-ghost" data-back="amount">&larr; Back</button>
+      </div>
+
+      <div id="category-sync-feedback" class="cat-sync-toast" style="display: none;"></div>
+
+      <div id="category-grid" class="category-grid-container">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- SCREEN 3: TYPE (Expense / Income) -->
+    <section id="screen-type" class="screen" aria-label="Step 3: Choose Transaction Type">
+      <div class="screen-header">
+        <span class="step-indicator">Step 3 of 4 &bull; Type</span>
+        <button type="button" class="btn-ghost" data-back="category">&larr; Back</button>
+      </div>
+
+      <div class="type-selection-container">
+        <button type="button" id="btn-type-expense" class="type-card-btn expense active">
+          <div class="type-info">
+            <span class="type-title">Expense</span>
+            <span class="type-desc">Money spent on goods or services</span>
+            <span class="type-badge-default">Default</span>
+          </div>
+          <span class="type-check">&#10003;</span>
+        </button>
+
+        <button type="button" id="btn-type-income" class="type-card-btn income">
+          <div class="type-info">
+            <span class="type-title">Income</span>
+            <span class="type-desc">Money received or deposited</span>
+          </div>
+          <span class="type-check">&#10003;</span>
+        </button>
+      </div>
+
+      <p class="selection-hint">Expense is selected by default. Tap Next to continue.</p>
+
+      <div class="bottom-action-bar">
+        <button type="button" id="btn-type-next" class="btn-primary">
+          <span>Next: Remark</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: REMARK / DESCRIPTION -->
+    <section id="screen-remark" class="screen" aria-label="Step 4: Enter Remark">
+      <div class="screen-header">
+        <span class="step-indicator">Step 4 of 4 &bull; Remark</span>
+        <button type="button" class="btn-ghost" data-back="type">&larr; Back</button>
+      </div>
+
+      <div class="remark-container">
+        <div class="input-box">
+          <input type="text" id="remark-input" class="text-input" placeholder="e.g. egg, iced latte, subway..." maxlength="60" autocomplete="off" autocorrect="off">
+        </div>
+
+        <div class="frequent-section">
+          <div class="section-label">Quick Suggestions</div>
+          <div id="recent-remarks-chips" class="chips-container">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-action-bar">
+        <button type="button" id="btn-remark-skip" class="btn-secondary">Skip</button>
+        <button type="button" id="btn-remark-next" class="btn-primary">
+          <span>Review</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: REVIEW & SEND -->
+    <section id="screen-review" class="screen" aria-label="Review and Confirm Entry">
+      <div class="screen-header">
+        <span class="step-indicator">Step 5 of 5 &bull; Review</span>
+        <button type="button" class="btn-ghost" data-back="remark">&larr; Back</button>
+      </div>
+
+      <div class="receipt-wrapper">
+        <div class="receipt-ticket">
+          <div class="receipt-header">
+            <div class="receipt-store-name">Pocket Ledger</div>
+            <div id="review-date" class="receipt-sub">Today</div>
+          </div>
+
+          <div class="receipt-line" data-edit-step="type" title="Click to edit type">
+            <span class="receipt-field-name">Type</span>
+            <span id="review-type" class="receipt-type-pill expense">EXPENSE</span>
+          </div>
+
+          <div class="receipt-line" data-edit-step="category" title="Click to edit category">
+            <span class="receipt-field-name">Category</span>
+            <span id="review-category" class="receipt-field-value">Food</span>
+          </div>
+
+          <div class="receipt-line" data-edit-step="remark" title="Click to edit remark">
+            <span class="receipt-field-name">Remark</span>
+            <span id="review-remark" class="receipt-field-value">(none)</span>
+          </div>
+
+          <div class="receipt-total-section" data-edit-step="amount" title="Click to edit amount">
+            <span class="receipt-total-label">Amount</span>
+            <span id="review-amount" class="receipt-amount expense">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-action-bar">
+        <button type="button" id="btn-confirm-send" class="btn-primary">
+          <span>CONFIRM &amp; LOG</span>
+          <span class="send-icon">&#10003;</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 6: SUCCESS & UNDO -->
+    <section id="screen-success" class="screen" aria-label="Success Confirmation">
+      <div class="success-container">
+        <div id="success-stamp" class="stamp logged">LOGGED</div>
+
+        <div id="success-message" class="success-headline">Entry Recorded</div>
+        <div id="success-row-info" class="success-details">Logged to Google Sheet</div>
+
+        <!-- 5-Second Undo Section -->
+        <div id="undo-container" class="undo-box">
+          <div class="undo-progress-track">
+            <div id="undo-progress-bar" class="undo-progress-fill"></div>
+          </div>
+          <button type="button" id="undo-btn" class="btn-undo">&#8617; Undo this entry</button>
+        </div>
+
+        <button type="button" id="btn-success-done" class="btn-primary" style="width: 100%;">
+          <span>Done</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 7: SETTINGS -->
+    <section id="screen-settings" class="screen" aria-label="Settings">
+      <div class="screen-header">
+        <span class="step-indicator">Settings</span>
+        <button type="button" id="btn-close-settings" class="btn-ghost">Done</button>
+      </div>
+
+      <div class="settings-content">
+
+        <!-- Apps Script Web App URL -->
+        <div class="settings-card">
+          <div class="settings-card-title">Google Apps Script Web App URL</div>
+          <input type="url" id="setting-gas-url" class="settings-input" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocorrect="off" autocapitalize="off">
+          <div class="btn-row">
+            <button type="button" id="btn-save-gas-url" class="btn-secondary">Save URL</button>
+            <button type="button" id="btn-test-gas-connection" class="btn-secondary">Test Connection</button>
+          </div>
+          <div id="gas-url-status" class="status-msg"></div>
+        </div>
+
+        <!-- Category Editor -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <span>Categories</span>
+            <span id="settings-cat-count" class="status-pill online" style="font-size: 0.72rem; padding: 2px 7px;">8</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="input-new-category" class="settings-input" placeholder="New category name..." maxlength="30">
+            <button type="button" id="btn-add-category" class="btn-secondary" style="flex: 0 0 70px;">Add</button>
+          </div>
+
+          <div id="settings-categories-list" class="settings-categories-list">
+            <!-- Populated dynamically -->
+          </div>
+
+          <div class="btn-row" style="flex-wrap: wrap;">
+            <button type="button" id="btn-sync-categories" class="btn-secondary" style="flex: 1 1 130px;">Sync from Sheet</button>
+            <button type="button" id="btn-replace-categories" class="btn-secondary" style="flex: 1 1 130px;" title="Replace all local categories with sheet categories">Match Sheet 1:1</button>
+            <button type="button" id="btn-reset-categories" class="btn-secondary" style="flex: 0 0 75px;">Reset</button>
+          </div>
+          <div id="sync-categories-status" class="status-msg"></div>
+
+          <!-- Apps Script Helper collapsible info -->
+          <details style="margin-top: 10px; font-size: 0.8rem; color: var(--ink-secondary); background: var(--bg-card-warm); border: 1px solid var(--border-ruling); border-radius: var(--radius-sm); padding: 8px 10px;">
+            <summary style="font-weight: 600; cursor: pointer; color: var(--ink-primary);">
+              Apps Script doGet setup helper (Click to view)
+            </summary>
+            <div style="margin-top: 8px; line-height: 1.4;">
+              <p style="margin-bottom: 6px;">To let Pocket Ledger fetch your custom categories live, make sure your Apps Script has this <code>doGet(e)</code> handler deployed with access set to <em>Anyone</em>:</p>
+              <pre style="background: var(--bg-ledger-row); padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 0.74rem; user-select: all;">function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var catSheet = ss.getSheetByName('categories') || ss.getSheetByName('Categories');
+  var categories = [];
+  if (catSheet) {
+    var vals = catSheet.getDataRange().getValues();
+    categories = vals.map(function(r) { return String(r[0] || '').trim(); }).filter(Boolean);
+  }
+  if (categories.length === 0) {
+    var rec = ss.getSheetByName('record');
+    if (rec && rec.getLastRow() >= 8) {
+      var d = rec.getRange(8, 4, rec.getLastRow() - 7, 1).getValues();
+      d.forEach(function(r) {
+        var c = String(r[0] || '').trim();
+        if (c && categories.indexOf(c) === -1) categories.push(c);
+      });
+    }
+  }
+  if (categories.length === 0) {
+    categories = ['Food', 'Transportation', 'Textbooks', 'Accessories', 'Fun', 'Rent', 'Miscellaneous', 'Events & Outings'];
+  }
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'success',
+    categories: categories
+  })).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+            </div>
+          </details>
+        </div>
+
+        <!-- Offline Queue Status -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <span>Offline Queue</span>
+            <span id="settings-queue-count" class="status-pill queue-badge">0</span>
+          </div>
+
+          <div id="settings-queue-list">
+            <!-- Populated dynamically -->
+          </div>
+
+          <div class="btn-row">
+            <button type="button" id="btn-retry-queue" class="btn-secondary">Retry Sending Queue</button>
+            <button type="button" id="btn-clear-queue" class="btn-secondary" style="flex: 0 0 90px; color: var(--color-expense);">Clear</button>
+          </div>
+          <div id="queue-action-status" class="status-msg"></div>
+        </div>
+
+        <!-- App Preferences -->
+        <div class="settings-card">
+          <div class="settings-card-title">Preferences</div>
+
+          <label style="font-size: 0.88rem; font-weight: 600; color: var(--ink-secondary);">
+            Currency Symbol
+            <select id="setting-currency" class="settings-select" style="margin-top: 6px;">
+              <option value="$">$ (USD / CAD / AUD)</option>
+              <option value="&#8377;">&#8377; (INR)</option>
+              <option value="&pound;">&pound; (GBP)</option>
+              <option value="&euro;">&euro; (EUR)</option>
+              <option value="&yen;">&yen; (JPY / CNY)</option>
+              <option value="&#8369;">&#8369; (PHP)</option>
+              <option value="&#8361;">&#8361; (KRW)</option>
+              <option value="">None</option>
+            </select>
+          </label>
+
+          <label style="font-size: 0.88rem; font-weight: 600; color: var(--ink-secondary); margin-top: 6px;">
+            Shake-to-Log Sensitivity
+            <select id="setting-shake-sensitivity" class="settings-select" style="margin-top: 6px;">
+              <option value="high">High (Extra sensitive &mdash; easy shake)</option>
+              <option value="medium">Medium (Recommended)</option>
+              <option value="low">Low (Firm shake)</option>
+              <option value="off">Disabled</option>
+            </select>
+          </label>
+
+          <!-- Shake Sensor Live Meter & Tester -->
+          <div style="background: var(--bg-card-warm); border: 1px solid var(--border-ruling); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: var(--ink-primary); margin-bottom: 6px;">
+              <span>Live Sensor Acceleration:</span>
+              <span id="shake-live-val">0.0 m/s&sup2;</span>
+            </div>
+            <div style="height: 8px; width: 100%; background: var(--bg-ledger-row); border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+              <div id="shake-live-bar" style="height: 100%; width: 0%; background: var(--color-expense); transition: width 0.05s ease-out;"></div>
+            </div>
+            <div id="shake-live-status" style="font-size: 0.78rem; color: var(--ink-secondary); line-height: 1.3;">
+              Move phone to calibrate sensitivity.
+            </div>
+            <button type="button" id="btn-test-shake-action" class="btn-secondary" style="width: 100%; margin-top: 8px; font-size: 0.85rem; padding: 6px;">
+              Test Shake Trigger
+            </button>
+          </div>
+        </div>
+
+        <!-- App Installation (PWA) -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <span>Install App (PWA)</span>
+            <span id="settings-pwa-badge" class="status-pill online">STANDALONE READY</span>
+          </div>
+          <div id="settings-pwa-status" style="font-size: 0.86rem; color: var(--ink-secondary); margin-bottom: 12px; line-height: 1.35;">
+            Install Pocket Ledger on your Samsung Galaxy S24 to run full-screen, offline-capable, and shake-ready without browser tabs.
+          </div>
+          <button type="button" id="btn-settings-install" class="btn-primary" style="width: 100%; min-height: 48px; font-size: 0.95rem;">
+            &#128242; Install to Home Screen
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Install Guide Modal for Samsung Galaxy S24 -->
+  <div id="modal-install-guide" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">&#128242; Install on Galaxy S24</span>
+        <button type="button" id="btn-close-install-modal" class="pwa-btn-dismiss" style="font-size: 1.4rem;">&#10005;</button>
+      </div>
+
+      <div class="instruction-tab-group">
+        <button type="button" id="tab-btn-samsung" class="instruction-tab-btn active">Samsung Internet</button>
+        <button type="button" id="tab-btn-chrome" class="instruction-tab-btn">Google Chrome</button>
+      </div>
+
+      <!-- Samsung Internet Instructions -->
+      <div id="tab-content-samsung">
+        <div class="instruction-step">
+          <div class="step-num">1</div>
+          <div class="step-text">Look at the <strong>URL address bar</strong> at the top. If you see a small <strong>download arrow (&#11015;&#65039;)</strong>, tap it to install immediately!</div>
+        </div>
+        <div class="instruction-step">
+          <div class="step-num">2</div>
+          <div class="step-text">Otherwise, tap the <strong>&#9776; (Menu)</strong> icon in the bottom-right corner of Samsung Internet.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="step-num">3</div>
+          <div class="step-text">Tap <strong>"Add page to"</strong>, then tap <strong>"Home screen"</strong>.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="step-num">4</div>
+          <div class="step-text">Tap <strong>"Add"</strong>. Pocket Ledger will now appear in your apps and open full-screen like a native app!</div>
+        </div>
+      </div>
+
+      <!-- Chrome Instructions -->
+      <div id="tab-content-chrome" style="display: none;">
+        <div class="instruction-step">
+          <div class="step-num">1</div>
+          <div class="step-text">Tap the <strong>three vertical dots (&#8942;)</strong> in the top-right corner of Google Chrome.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="step-num">2</div>
+          <div class="step-text">Tap <strong>"Install app"</strong> (or <strong>"Add to Home screen"</strong>).</div>
+        </div>
+        <div class="instruction-step">
+          <div class="step-num">3</div>
+          <div class="step-text">Tap <strong>"Install"</strong> when prompted. Android will create a native WebAPK app on your home screen!</div>
+        </div>
+      </div>
+
+      <button type="button" id="btn-modal-got-it" class="btn-primary" style="width: 100%; min-height: 46px; margin-top: 14px;">
+        Got it!
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // --- storage.js ---
+    /**
+ * storage.js - Pocket Ledger Local Storage Manager
+ */
+
+const StorageKeys = {
+  GAS_URL: 'pl_gas_url',
+  CATEGORIES: 'pl_categories',
+  LAST_CAT_SYNC: 'pl_last_cat_sync',
+  QUEUE: 'pl_queue',
+  RECENT_REMARKS: 'pl_recent_remarks',
+  LOCAL_LOG: 'pl_local_log',
+  SETTINGS: 'pl_settings'
+};
+
+const DEFAULT_CATEGORIES = [
+  'Food',
+  'Transportation',
+  'Textbooks',
+  'Accessories',
+  'Fun',
+  'Rent',
+  'Miscellaneous',
+  'Events & Outings'
+];
+
+const DEFAULT_SETTINGS = {
+  currency: '$',
+  shakeEnabled: true,
+  shakeSensitivity: 'medium', // 'low', 'medium', 'high'
+  haptics: true
+};
+
+const Storage = {
+  // --- GAS URL ---
+  getGasUrl() {
+    try {
+      return (localStorage.getItem(StorageKeys.GAS_URL) || '').trim();
+    } catch (e) {
+      console.warn('Storage read error:', e);
+      return '';
+    }
+  },
+
+  setGasUrl(url) {
+    try {
+      localStorage.setItem(StorageKeys.GAS_URL, (url || '').trim());
+      window.dispatchEvent(new CustomEvent('pl:gas-url-changed', { detail: url }));
+      return true;
+    } catch (e) {
+      console.error('Storage write error:', e);
+      return false;
+    }
+  },
+
+  // --- Categories ---
+  getCategories() {
+    try {
+      const raw = localStorage.getItem(StorageKeys.CATEGORIES);
+      if (!raw) return [...DEFAULT_CATEGORIES];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading categories:', e);
+    }
+    return [...DEFAULT_CATEGORIES];
+  },
+
+  setCategories(categories) {
+    try {
+      const cleaned = Array.from(new Set(categories.map(c => String(c).trim()).filter(Boolean)));
+      localStorage.setItem(StorageKeys.CATEGORIES, JSON.stringify(cleaned));
+      window.dispatchEvent(new CustomEvent('pl:categories-changed', { detail: cleaned }));
+      return cleaned;
+    } catch (e) {
+      console.error('Error saving categories:', e);
+      return this.getCategories();
+    }
+  },
+
+  resetCategoriesToDefault() {
+    return this.setCategories(DEFAULT_CATEGORIES);
+  },
+
+  addCategory(name) {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return false;
+    const cats = this.getCategories();
+    if (cats.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      return false; // already exists
+    }
+    cats.push(trimmed);
+    this.setCategories(cats);
+    return true;
+  },
+
+  removeCategory(name) {
+    const cats = this.getCategories().filter(c => c !== name);
+    this.setCategories(cats);
+    return true;
+  },
+
+  moveCategory(fromIndex, toIndex) {
+    const cats = this.getCategories();
+    if (fromIndex < 0 || fromIndex >= cats.length || toIndex < 0 || toIndex >= cats.length) {
+      return false;
+    }
+    const [moved] = cats.splice(fromIndex, 1);
+    cats.splice(toIndex, 0, moved);
+    this.setCategories(cats);
+    return true;
+  },
+
+  getLastCategorySyncTime() {
+    try {
+      return parseInt(localStorage.getItem(StorageKeys.LAST_CAT_SYNC) || '0', 10);
+    } catch (e) {
+      return 0;
+    }
+  },
+
+  setLastCategorySyncTime(ts) {
+    try {
+      localStorage.setItem(StorageKeys.LAST_CAT_SYNC, String(ts || Date.now()));
+    } catch (e) {}
+  },
+
+  mergeCategories(remoteCategories) {
+    if (!Array.isArray(remoteCategories)) return { updated: this.getCategories(), addedCount: 0 };
+    const current = this.getCategories();
+    const currentLower = new Set(current.map(c => c.toLowerCase()));
+    const newItems = [];
+
+    remoteCategories.forEach(item => {
+      const trimmed = String(item || '').trim();
+      if (trimmed && !currentLower.has(trimmed.toLowerCase())) {
+        currentLower.add(trimmed.toLowerCase());
+        newItems.push(trimmed);
+      }
+    });
+
+    if (newItems.length > 0) {
+      const updated = [...current, ...newItems];
+      this.setCategories(updated);
+      return { updated, addedCount: newItems.length };
+    }
+    return { updated: current, addedCount: 0 };
+  },
+
+  replaceCategoriesWithSheet(remoteCategories) {
+    if (!Array.isArray(remoteCategories) || remoteCategories.length === 0) {
+      return { categories: this.getCategories(), addedCount: 0, removedCount: 0, message: 'No categories to update.' };
+    }
+    const current = this.getCategories();
+    const currentSet = new Set(current.map(c => c.toLowerCase()));
+
+    const seen = new Set();
+    const cleaned = [];
+    remoteCategories.forEach(item => {
+      const trimmed = String(item || '').trim();
+      const lower = trimmed.toLowerCase();
+      if (trimmed && !seen.has(lower)) {
+        seen.add(lower);
+        cleaned.push(trimmed);
+      }
+    });
+
+    const newSet = new Set(cleaned.map(c => c.toLowerCase()));
+    const addedCount = cleaned.filter(c => !currentSet.has(c.toLowerCase())).length;
+    const removedCount = current.filter(c => !newSet.has(c.toLowerCase())).length;
+
+    this.setCategories(cleaned);
+
+    let summary = `Updated with ${cleaned.length} categories from sheet!`;
+    if (addedCount > 0 && removedCount > 0) {
+      summary = `Matched sheet: +${addedCount} new, -${removedCount} removed (${cleaned.length} total).`;
+    } else if (addedCount > 0) {
+      summary = `Added ${addedCount} new categories from sheet (${cleaned.length} total).`;
+    } else if (removedCount > 0) {
+      summary = `Removed ${removedCount} stale categories to match sheet (${cleaned.length} total).`;
+    } else {
+      summary = `Categories refreshed from sheet (${cleaned.length} total).`;
+    }
+
+    return {
+      categories: cleaned,
+      addedCount,
+      removedCount,
+      message: summary
+    };
+  },
+
+  smartSyncCategories(remoteCategories) {
+    if (!Array.isArray(remoteCategories) || remoteCategories.length === 0) {
+      return { categories: this.getCategories(), addedCount: 0, removedCount: 0, message: 'No categories to update.' };
+    }
+    const current = this.getCategories();
+    const currentSet = new Set(current.map(c => c.toLowerCase()));
+    const defaultSet = new Set(DEFAULT_CATEGORIES.map(c => c.toLowerCase()));
+
+    // Deduplicate remote categories preserving sheet order and casing
+    const seen = new Set();
+    const baseList = [];
+    remoteCategories.forEach(item => {
+      const trimmed = String(item || '').trim();
+      const lower = trimmed.toLowerCase();
+      if (trimmed && !seen.has(lower)) {
+        seen.add(lower);
+        baseList.push(trimmed);
+      }
+    });
+
+    // Retain any locally added custom categories that are not default categories
+    const localCustomAdditions = current.filter(c => {
+      const lower = c.toLowerCase();
+      return !seen.has(lower) && !defaultSet.has(lower);
+    });
+
+    const finalList = [...baseList, ...localCustomAdditions];
+    const finalSet = new Set(finalList.map(c => c.toLowerCase()));
+
+    const addedCount = finalList.filter(c => !currentSet.has(c.toLowerCase())).length;
+    const removedCount = current.filter(c => !finalSet.has(c.toLowerCase())).length;
+
+    this.setCategories(finalList);
+
+    let summary = `Synced ${finalList.length} categories from sheet!`;
+    if (addedCount > 0 && removedCount > 0) {
+      summary = `Updated from sheet: +${addedCount} new, -${removedCount} removed (${finalList.length} total).`;
+    } else if (addedCount > 0) {
+      summary = `Added ${addedCount} new categories from sheet (${finalList.length} total).`;
+    } else if (removedCount > 0) {
+      summary = `Refreshed categories: removed ${removedCount} stale defaults (${finalList.length} total).`;
+    } else {
+      summary = `Categories are up to date with sheet (${finalList.length} total).`;
+    }
+
+    return {
+      categories: finalList,
+      addedCount,
+      removedCount,
+      message: summary
+    };
+  },
+
+  // --- Offline Queue ---
+  getQueue() {
+    try {
+      const raw = localStorage.getItem(StorageKeys.QUEUE);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.warn('Error reading queue:', e);
+      return [];
+    }
+  },
+
+  enqueue(entry) {
+    try {
+      const queue = this.getQueue();
+      const queuedItem = {
+        id: entry.id || 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        amount: String(entry.amount),
+        category: String(entry.category),
+        type: String(entry.type || 'Expense'),
+        remark: String(entry.remark || ''),
+        timestamp: entry.timestamp || new Date().toISOString(),
+        retries: entry.retries || 0,
+        lastError: entry.lastError || null
+      };
+      queue.push(queuedItem);
+      localStorage.setItem(StorageKeys.QUEUE, JSON.stringify(queue));
+      window.dispatchEvent(new CustomEvent('pl:queue-changed', { detail: queue }));
+      return queuedItem;
+    } catch (e) {
+      console.error('Error adding to queue:', e);
+      return null;
+    }
+  },
+
+  dequeue(id) {
+    try {
+      let queue = this.getQueue();
+      queue = queue.filter(item => item.id !== id);
+      localStorage.setItem(StorageKeys.QUEUE, JSON.stringify(queue));
+      window.dispatchEvent(new CustomEvent('pl:queue-changed', { detail: queue }));
+      return queue;
+    } catch (e) {
+      console.error('Error removing from queue:', e);
+      return this.getQueue();
+    }
+  },
+
+  updateQueueItem(id, updates) {
+    try {
+      const queue = this.getQueue().map(item => {
+        if (item.id === id) {
+          return { ...item, ...updates };
+        }
+        return item;
+      });
+      localStorage.setItem(StorageKeys.QUEUE, JSON.stringify(queue));
+      window.dispatchEvent(new CustomEvent('pl:queue-changed', { detail: queue }));
+      return queue;
+    } catch (e) {
+      console.error('Error updating queue item:', e);
+      return this.getQueue();
+    }
+  },
+
+  clearQueue() {
+    try {
+      localStorage.removeItem(StorageKeys.QUEUE);
+      window.dispatchEvent(new CustomEvent('pl:queue-changed', { detail: [] }));
+      return true;
+    } catch (e) {
+      console.error('Error clearing queue:', e);
+      return false;
+    }
+  },
+
+  // --- Recent Remarks (Frequent items) ---
+  getRecentRemarks() {
+    try {
+      const raw = localStorage.getItem(StorageKeys.RECENT_REMARKS);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  addRecentRemark(remark) {
+    const trimmed = String(remark || '').trim();
+    if (!trimmed) return;
+    try {
+      let recents = this.getRecentRemarks().filter(r => r.toLowerCase() !== trimmed.toLowerCase());
+      recents.unshift(trimmed);
+      if (recents.length > 5) {
+        recents = recents.slice(0, 5);
+      }
+      localStorage.setItem(StorageKeys.RECENT_REMARKS, JSON.stringify(recents));
+      window.dispatchEvent(new CustomEvent('pl:recent-remarks-changed', { detail: recents }));
+    } catch (e) {
+      console.warn('Error saving recent remark:', e);
+    }
+  },
+
+  // --- Local Transaction Log (for running totals) ---
+  getLocalLog() {
+    try {
+      const raw = localStorage.getItem(StorageKeys.LOCAL_LOG);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  addLocalLog(entry) {
+    try {
+      let logs = this.getLocalLog();
+      const logItem = {
+        id: entry.id || 'log_' + Date.now(),
+        amount: parseFloat(entry.amount) || 0,
+        category: entry.category,
+        type: entry.type || 'Expense',
+        remark: entry.remark || '',
+        row: entry.row || null,
+        timestamp: entry.timestamp || new Date().toISOString(),
+        status: entry.status || 'synced' // 'synced' or 'queued'
+      };
+      logs.unshift(logItem);
+      // Keep last 100 entries locally
+      if (logs.length > 100) {
+        logs = logs.slice(0, 100);
+      }
+      localStorage.setItem(StorageKeys.LOCAL_LOG, JSON.stringify(logs));
+      window.dispatchEvent(new CustomEvent('pl:log-changed', { detail: logs }));
+      return logItem;
+    } catch (e) {
+      console.warn('Error saving local log:', e);
+      return null;
+    }
+  },
+
+  markLogSynced(id, rowNumber) {
+    try {
+      let logs = this.getLocalLog().map(l => {
+        if (l.id === id) {
+          return { ...l, status: 'synced', row: rowNumber || l.row };
+        }
+        return l;
+      });
+      localStorage.setItem(StorageKeys.LOCAL_LOG, JSON.stringify(logs));
+      window.dispatchEvent(new CustomEvent('pl:log-changed', { detail: logs }));
+    } catch (e) {
+      console.warn('Error updating local log status:', e);
+    }
+  },
+
+  removeLocalLog(id) {
+    try {
+      let logs = this.getLocalLog().filter(l => l.id !== id);
+      localStorage.setItem(StorageKeys.LOCAL_LOG, JSON.stringify(logs));
+      window.dispatchEvent(new CustomEvent('pl:log-changed', { detail: logs }));
+    } catch (e) {
+      console.warn('Error removing local log:', e);
+    }
+  },
+
+  // --- Settings ---
+  getSettings() {
+    try {
+      const raw = localStorage.getItem(StorageKeys.SETTINGS);
+      if (!raw) return { ...DEFAULT_SETTINGS };
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    } catch (e) {
+      return { ...DEFAULT_SETTINGS };
+    }
+  },
+
+  updateSettings(updates) {
+    try {
+      const current = this.getSettings();
+      const merged = { ...current, ...updates };
+      localStorage.setItem(StorageKeys.SETTINGS, JSON.stringify(merged));
+      window.dispatchEvent(new CustomEvent('pl:settings-changed', { detail: merged }));
+      return merged;
+    } catch (e) {
+      console.error('Error saving settings:', e);
+      return this.getSettings();
+    }
+  }
+};
+
+window.PocketStorage = Storage;
+
+    // --- motion.js ---
+    /**
+ * motion.js - Pocket Ledger Shake Detection & Device Motion Manager
+ * Optimized for Samsung Galaxy S24 and modern mobile browsers
+ */
+
+const Motion = {
+  isSupported: false,
+  permissionGranted: false,
+  isListening: false,
+  insecureContext: false,
+  lastX: null,
+  lastY: null,
+  lastZ: null,
+  lastTime: 0,
+  lastShakeTime: 0,
+  cooldownMs: 1400, // Cooldown time between shakes
+  onMotionSample: null, // Callback for live meter/calibration
+
+  // Sensitivity thresholds (vector acceleration delta in m/sÂ²)
+  thresholds: {
+    high: 8.5,    // Light wrist shake
+    medium: 13.0, // Standard deliberate shake
+    low: 18.5     // Firm vigorous shake
+  },
+
+  init() {
+    // Check for Secure Context (HTTPS or localhost)
+    // Chrome on Android strictly blocks motion sensors on insecure HTTP (e.g. http://192.168.x.x)
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (typeof window !== 'undefined' && !window.isSecureContext && !isLocalhost) {
+      console.warn('[Motion] Motion sensors blocked by browser: insecure context (HTTP). HTTPS is required.');
+      this.insecureContext = true;
+    }
+
+    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+      this.isSupported = true;
+      this.setupPermission();
+    } else {
+      this.isSupported = false;
+      this.updateAffordanceUI(false);
+    }
+  },
+
+  setupPermission() {
+    // iOS 13+ permission model
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      this.permissionGranted = false;
+      this.updateAffordanceUI(true, true);
+    } else {
+      // Android / Chrome: permission is granted by default on secure contexts
+      this.permissionGranted = true;
+      this.startListening();
+      this.updateAffordanceUI(true, false);
+    }
+  },
+
+  async requestPermission() {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      try {
+        const state = await DeviceMotionEvent.requestPermission();
+        if (state === 'granted') {
+          this.permissionGranted = true;
+          this.startListening();
+          this.updateAffordanceUI(true, false);
+          return true;
+        } else {
+          this.permissionGranted = false;
+          this.updateAffordanceUI(false, false);
+          return false;
+        }
+      } catch (err) {
+        console.warn('[Motion] Permission request error:', err);
+        return false;
+      }
+    }
+    return true;
+  },
+
+  startListening() {
+    if (!this.isSupported || this.isListening) return;
+
+    this.motionHandler = this.handleMotion.bind(this);
+    window.addEventListener('devicemotion', this.motionHandler, { passive: true });
+    this.isListening = true;
+    console.log('[Motion] Shake detection listener started.');
+  },
+
+  stopListening() {
+    if (this.motionHandler && this.isListening) {
+      window.removeEventListener('devicemotion', this.motionHandler);
+      this.isListening = false;
+    }
+  },
+
+  handleMotion(event) {
+    const settings = PocketStorage.getSettings();
+    if (!settings.shakeEnabled) return;
+
+    // Use acceleration or accelerationIncludingGravity
+    const acc = event.accelerationIncludingGravity || event.acceleration;
+    if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
+
+    const currentTime = Date.now();
+    // Sample every ~60ms
+    if (currentTime - this.lastTime < 60) return;
+    this.lastTime = currentTime;
+
+    const x = acc.x;
+    const y = acc.y;
+    const z = acc.z;
+
+    if (this.lastX !== null) {
+      const deltaX = Math.abs(x - this.lastX);
+      const deltaY = Math.abs(y - this.lastY);
+      const deltaZ = Math.abs(z - this.lastZ);
+
+      // Vector magnitude of change (proven reliable on Android & Galaxy S24)
+      const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+      // Report to live visual tester if open
+      if (this.onMotionSample) {
+        this.onMotionSample(delta, x, y, z);
+      }
+
+      const threshold = this.thresholds[settings.shakeSensitivity] || this.thresholds.medium;
+
+      // Check if threshold exceeded
+      if (delta > threshold) {
+        if (currentTime - this.lastShakeTime > this.cooldownMs) {
+          this.lastShakeTime = currentTime;
+          this.onShakeTriggered();
+        }
+      }
+    }
+
+    this.lastX = x;
+    this.lastY = y;
+    this.lastZ = z;
+  },
+
+  onShakeTriggered() {
+    console.log('[Motion] Shake event detected!');
+    
+    // Haptic feedback
+    if (navigator.vibrate && PocketStorage.getSettings().haptics) {
+      try {
+        navigator.vibrate([60, 40, 60]);
+      } catch (e) {}
+    }
+
+    // Visual pulse on the shake pill
+    const hint = document.getElementById('shake-hint-badge');
+    if (hint) {
+      hint.classList.add('shake-active');
+      setTimeout(() => hint.classList.remove('shake-active'), 600);
+    }
+
+    // Dispatch global event
+    window.dispatchEvent(new CustomEvent('pl:shake-detected'));
+  },
+
+  simulateShake() {
+    this.onShakeTriggered();
+  },
+
+  updateAffordanceUI(isAvailable, needsPermission = false) {
+    const hint = document.getElementById('shake-hint-badge');
+    if (!hint) return;
+
+    if (this.insecureContext) {
+      hint.style.display = 'inline-flex';
+      hint.innerHTML = '<span class="shake-icon">&#9888;&#65039;</span> <span>Shake needs HTTPS (Tap to learn)</span>';
+      hint.style.cursor = 'pointer';
+      hint.onclick = () => {
+        alert(
+          'Why is shake disabled?\n\n' +
+          'Google Chrome on Android restricts motion sensors to secure HTTPS connections only.\n\n' +
+          'To enable Shake-to-Log and install the app to your home screen, deploy Pocket Ledger to HTTPS (e.g. Netlify, Vercel, or GitHub Pages).'
+        );
+      };
+      return;
+    }
+
+    if (!isAvailable) {
+      hint.style.display = 'none';
+      return;
+    }
+
+    hint.style.display = 'inline-flex';
+    if (needsPermission) {
+      hint.innerHTML = '<span class="shake-icon">&#128241;</span> <span>Tap to enable shake</span>';
+      hint.style.cursor = 'pointer';
+      hint.onclick = () => this.requestPermission();
+    } else {
+      hint.innerHTML = '<span class="shake-icon">&#128241;</span> <span>Shake phone or tap to log</span>';
+      hint.onclick = null;
+      hint.style.cursor = 'default';
+    }
+  }
+};
+
+window.PocketMotion = Motion;
+
+    // --- sync.js ---
+    /**
+ * sync.js - Pocket Ledger Network & Google Apps Script Sync Engine
+ */
+
+const Sync = {
+  isSyncing: false,
+  syncIntervalId: null,
+
+  init() {
+    // Listen to network status changes
+    window.addEventListener('online', () => {
+      console.log('[Sync] Device is online. Attempting queue flush...');
+      this.updateNetworkBadge(true);
+      this.processQueue();
+      // Also refresh categories when coming back online
+      if (PocketStorage.getGasUrl()) {
+        this.fetchCategoriesFromSheet({ mode: 'smart', silent: true }).catch(() => {});
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('[Sync] Device is offline.');
+      this.updateNetworkBadge(false);
+    });
+
+    // Check visibility change (app brought to foreground on phone)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        this.processQueue();
+        if (PocketStorage.getGasUrl()) {
+          const lastSync = PocketStorage.getLastCategorySyncTime();
+          // Auto-sync if more than 3 minutes since last check
+          if (Date.now() - lastSync > 180000) {
+            this.fetchCategoriesFromSheet({ mode: 'smart', silent: true }).catch(() => {});
+          }
+        }
+      }
+    });
+
+    // Auto-sync categories in background on app startup if connected
+    if (navigator.onLine && PocketStorage.getGasUrl()) {
+      setTimeout(() => {
+        this.fetchCategoriesFromSheet({ mode: 'smart', silent: true }).catch(() => {});
+      }, 1200);
+    }
+
+    // Start background check interval (every 30s)
+    this.startAutoSync(30000);
+
+    // Initial badge update
+    this.updateNetworkBadge(navigator.onLine);
+  },
+
+  updateNetworkBadge(isOnline) {
+    const badge = document.getElementById('network-status-badge');
+    if (badge) {
+      if (isOnline) {
+        badge.textContent = 'ONLINE';
+        badge.className = 'status-pill online';
+      } else {
+        badge.textContent = 'OFFLINE';
+        badge.className = 'status-pill offline';
+      }
+    }
+    window.dispatchEvent(new CustomEvent('pl:network-status', { detail: { isOnline } }));
+  },
+
+  startAutoSync(intervalMs = 30000) {
+    if (this.syncIntervalId) clearInterval(this.syncIntervalId);
+    this.syncIntervalId = setInterval(() => {
+      if (navigator.onLine && !this.isSyncing) {
+        const queue = PocketStorage.getQueue();
+        if (queue.length > 0) {
+          this.processQueue();
+        }
+      }
+    }, intervalMs);
+  },
+
+  /**
+   * Send an entry to Apps Script.
+   * If offline or fails, it will be enqueued in localStorage.
+   */
+  async submitEntry(entry) {
+    const url = PocketStorage.getGasUrl();
+
+    // Prepare entry data
+    const cleanEntry = {
+      id: entry.id || 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      amount: String(entry.amount),
+      category: String(entry.category),
+      type: String(entry.type || 'Expense'),
+      remark: String(entry.remark || '')
+    };
+
+    // If no URL is configured yet or device is offline, enqueue immediately
+    if (!url || !navigator.onLine) {
+      const reason = !url ? 'No Apps Script URL configured' : 'Device is offline';
+      const queuedItem = PocketStorage.enqueue({
+        ...cleanEntry,
+        lastError: reason
+      });
+      // Also record in local log for running totals
+      PocketStorage.addLocalLog({
+        ...cleanEntry,
+        status: 'queued'
+      });
+      if (cleanEntry.remark) {
+        PocketStorage.addRecentRemark(cleanEntry.remark);
+      }
+      return {
+        success: true,
+        queued: true,
+        message: !url
+          ? 'Saved locally! Please add your Apps Script URL in Settings to sync.'
+          : 'Saved offline. Will sync automatically once reconnected.',
+        entry: queuedItem
+      };
+    }
+
+    try {
+      const result = await this.postToSheet(url, cleanEntry);
+      if (result.status === 'success') {
+        // Record in local log
+        PocketStorage.addLocalLog({
+          ...cleanEntry,
+          row: result.row,
+          status: 'synced'
+        });
+        if (cleanEntry.remark) {
+          PocketStorage.addRecentRemark(cleanEntry.remark);
+        }
+        return {
+          success: true,
+          queued: false,
+          data: result,
+          message: 'Entry logged to Google Sheet (Row ' + (result.row || '') + ')'
+        };
+      } else {
+        throw new Error(result.message || 'Apps Script returned error status');
+      }
+    } catch (err) {
+      console.warn('[Sync] Post failed, saving to offline queue:', err);
+      const queuedItem = PocketStorage.enqueue({
+        ...cleanEntry,
+        lastError: err.message || 'Network request failed'
+      });
+      PocketStorage.addLocalLog({
+        ...cleanEntry,
+        status: 'queued'
+      });
+      if (cleanEntry.remark) {
+        PocketStorage.addRecentRemark(cleanEntry.remark);
+      }
+      return {
+        success: true,
+        queued: true,
+        message: 'Network issue. Saved offline and queued for auto-sync.',
+        entry: queuedItem
+      };
+    }
+  },
+
+  /**
+   * Helper to perform POST with form-urlencoded body
+   */
+  async postToSheet(url, payload) {
+    const body = new URLSearchParams();
+    body.append('amount', String(payload.amount));
+    body.append('category', String(payload.category));
+    body.append('type', String(payload.type));
+    body.append('remark', String(payload.remark || ''));
+
+    // Optional undo or action identifier if present
+    if (payload.action) {
+      body.append('action', String(payload.action));
+    }
+    if (payload.row) {
+      body.append('row', String(payload.row));
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 18000); // 18s timeout
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString(),
+        redirect: 'follow',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+      }
+
+      const text = await response.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (parseErr) {
+        // In case response is text/html redirect or plain text
+        if (text.includes('"status": "success"') || text.includes('"status":"success"')) {
+          json = { status: 'success' };
+        } else {
+          throw new Error('Invalid JSON response from server: ' + text.substring(0, 100));
+        }
+      }
+
+      return json;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
+  /**
+   * Send an optional delete/undo request to Apps Script
+   */
+  async undoEntry(rowNumber) {
+    const url = PocketStorage.getGasUrl();
+    if (!url || !rowNumber) return { success: false, message: 'Missing URL or row number' };
+
+    try {
+      const result = await this.postToSheet(url, {
+        action: 'delete',
+        row: rowNumber,
+        amount: '0',
+        category: '',
+        type: 'Expense',
+        remark: ''
+      });
+      return { success: result.status === 'success', data: result };
+    } catch (err) {
+      console.warn('[Sync] Undo request error:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Fetch category list from Apps Script GET endpoint
+   */
+  async fetchCategoriesFromSheet(options = {}) {
+    const mode = options.mode || 'smart'; // 'smart' (default), 'replace', or 'merge'
+    const silent = options.silent || false;
+    const url = PocketStorage.getGasUrl();
+    if (!url) {
+      return { success: false, message: 'Please enter and save your Apps Script URL first.' };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    // Build URL with cache-busting timestamp and explicit action parameter
+    const sep = url.includes('?') ? '&' : '?';
+    const fetchUrl = `${url}${sep}action=getCategories&_t=${Date.now()}`;
+
+    try {
+      const response = await fetch(fetchUrl, {
+        method: 'GET',
+        redirect: 'follow',
+        cache: 'no-store',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const rawText = await response.text();
+
+      // Check if response is HTML (Google Login redirect or Google error page)
+      if (rawText.trim().startsWith('<') || rawText.includes('<!DOCTYPE') || rawText.includes('Google Accounts')) {
+        throw new Error(
+          'Apps Script returned HTML instead of JSON. Ensure your Web App is deployed with "Execute as: Me" and "Who has access: Anyone".'
+        );
+      }
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        throw new Error('Invalid JSON from sheet: ' + rawText.slice(0, 100));
+      }
+
+      // Check for explicit error returned by script
+      if (data && data.status === 'error') {
+        throw new Error(data.message || 'Apps Script returned an error.');
+      }
+
+      // Flexible extraction: handles array directly, { categories: [...] }, { data: [...] }, etc.
+      let remoteList = null;
+      if (Array.isArray(data)) {
+        remoteList = data;
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.categories)) remoteList = data.categories;
+        else if (Array.isArray(data.data)) remoteList = data.data;
+        else if (Array.isArray(data.items)) remoteList = data.items;
+        else if (Array.isArray(data.result)) remoteList = data.result;
+        else if (typeof data.categories === 'string') {
+          remoteList = data.categories.split(',').map(s => s.trim()).filter(Boolean);
+        }
+      }
+
+      if (!remoteList || !Array.isArray(remoteList) || remoteList.length === 0) {
+        throw new Error('No categories found in response. Expected { categories: ["..."] } or array.');
+      }
+
+      // Normalize items (strings or object fields)
+      const parsedCats = remoteList.map(item => {
+        if (typeof item === 'string') return item.trim();
+        if (item && typeof item === 'object') {
+          return String(item.name || item.category || item.label || item.title || Object.values(item)[0] || '').trim();
+        }
+        return String(item || '').trim();
+      }).filter(Boolean);
+
+      if (parsedCats.length === 0) {
+        throw new Error('Sheet returned an empty category list.');
+      }
+
+      // Apply to storage based on mode
+      let syncResult;
+      if (mode === 'replace') {
+        syncResult = PocketStorage.replaceCategoriesWithSheet(parsedCats);
+      } else if (mode === 'merge') {
+        const m = PocketStorage.mergeCategories(parsedCats);
+        syncResult = {
+          categories: m.updated,
+          addedCount: m.addedCount,
+          removedCount: 0,
+          message: m.addedCount > 0
+            ? `Merged ${m.addedCount} new categories from sheet!`
+            : 'Categories are already up to date with sheet.'
+        };
+      } else {
+        // 'smart' mode (default)
+        syncResult = PocketStorage.smartSyncCategories(parsedCats);
+      }
+
+      PocketStorage.setLastCategorySyncTime(Date.now());
+
+      return {
+        success: true,
+        mode: mode,
+        categories: syncResult.categories,
+        addedCount: syncResult.addedCount,
+        removedCount: syncResult.removedCount,
+        totalRemote: parsedCats.length,
+        message: syncResult.message
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      const isAbort = err.name === 'AbortError';
+      const msg = isAbort ? 'Connection timed out after 12 seconds.' : (err.message || 'Network error');
+      console.warn('[Sync] Category fetch failed:', msg);
+      return {
+        success: false,
+        message: 'Could not fetch categories: ' + msg
+      };
+    }
+  },
+
+  /**
+   * Process all queued entries in FIFO order
+   */
+  async processQueue() {
+    if (this.isSyncing) return { inProgress: true };
+    const url = PocketStorage.getGasUrl();
+    if (!url) return { error: 'No URL configured' };
+
+    const queue = PocketStorage.getQueue();
+    if (queue.length === 0) return { count: 0 };
+
+    this.isSyncing = true;
+    window.dispatchEvent(new CustomEvent('pl:sync-started', { detail: { count: queue.length } }));
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const item of [...queue]) {
+      try {
+        const result = await this.postToSheet(url, item);
+        if (result.status === 'success') {
+          PocketStorage.dequeue(item.id);
+          PocketStorage.markLogSynced(item.id, result.row);
+          successCount++;
+        } else {
+          PocketStorage.updateQueueItem(item.id, {
+            retries: (item.retries || 0) + 1,
+            lastError: result.message || 'Apps Script error'
+          });
+          failedCount++;
+          break; // Stop sequential queue to preserve ordering
+        }
+      } catch (err) {
+        PocketStorage.updateQueueItem(item.id, {
+          retries: (item.retries || 0) + 1,
+          lastError: err.message || 'Network error'
+        });
+        failedCount++;
+        break; // Stop on first network error
+      }
+    }
+
+    this.isSyncing = false;
+    window.dispatchEvent(new CustomEvent('pl:sync-finished', {
+      detail: { successCount, failedCount, remaining: PocketStorage.getQueue().length }
+    }));
+
+    return { successCount, failedCount, remaining: PocketStorage.getQueue().length };
+  }
+};
+
+window.PocketSync = Sync;
+
+    // --- app.js ---
+    /**
+ * app.js - Pocket Ledger Main Application Controller
+ */
+
+(function() {
+  'use strict';
+
+  // State
+  const state = {
+    currentScreen: 'home',
+    entry: {
+      amount: '',
+      category: '',
+      type: 'Expense', // Expense is default
+      remark: ''
+    },
+    undoTimerId: null,
+    undoSecondsLeft: 5,
+    lastLoggedResult: null
+  };
+
+  // DOM Elements
+  const screens = {};
+  let amountDisplay, keypadContainer, categoryGrid, typeExpenseBtn, typeIncomeBtn, remarkInput;
+  let reviewAmount, reviewCategory, reviewType, reviewRemark;
+  let successStamp, successMessage, successRowInfo, undoContainer, undoProgressBar, undoButton;
+  let queueCountBadge, todayTotalEl, monthTotalEl;
+
+  // Initialize Application
+  function init() {
+    cacheDOMElements();
+    setupNavigation();
+    setupKeypad();
+    setupCategoryScreen();
+    setupTypeScreen();
+    setupRemarkScreen();
+    setupReviewAndSubmit();
+    setupSettingsScreen();
+    setupShakeListener();
+    setupStorageListeners();
+
+    // Init storage & sync
+    PocketSync.init();
+    PocketMotion.init();
+
+    // Render initial data
+    renderCategories();
+    renderRecentRemarks();
+    renderRunningTotals();
+    renderQueueStatus();
+
+    // Check if Apps Script URL is set on first run
+    const url = PocketStorage.getGasUrl();
+    if (!url) {
+      const banner = document.getElementById('first-run-banner');
+      if (banner) banner.style.display = 'block';
+    }
+
+    navigateTo('home');
+  }
+
+  function cacheDOMElements() {
+    // Screens
+    ['home', 'amount', 'category', 'type', 'remark', 'review', 'success', 'settings'].forEach(id => {
+      screens[id] = document.getElementById('screen-' + id);
+    });
+
+    // Inputs & displays
+    amountDisplay = document.getElementById('amount-display-value');
+    keypadContainer = document.getElementById('numpad-container');
+    categoryGrid = document.getElementById('category-grid');
+    typeExpenseBtn = document.getElementById('btn-type-expense');
+    typeIncomeBtn = document.getElementById('btn-type-income');
+    remarkInput = document.getElementById('remark-input');
+
+    // Review fields
+    reviewAmount = document.getElementById('review-amount');
+    reviewCategory = document.getElementById('review-category');
+    reviewType = document.getElementById('review-type');
+    reviewRemark = document.getElementById('review-remark');
+
+    // Success elements
+    successStamp = document.getElementById('success-stamp');
+    successMessage = document.getElementById('success-message');
+    successRowInfo = document.getElementById('success-row-info');
+    undoContainer = document.getElementById('undo-container');
+    undoProgressBar = document.getElementById('undo-progress-bar');
+    undoButton = document.getElementById('undo-btn');
+
+    // Badges & totals
+    queueCountBadge = document.getElementById('queue-count-badge');
+    todayTotalEl = document.getElementById('today-total');
+    monthTotalEl = document.getElementById('month-total');
+  }
+
+  // --- Screen Navigation ---
+  function navigateTo(screenName) {
+    Object.keys(screens).forEach(key => {
+      if (screens[key]) {
+        screens[key].classList.remove('active');
+      }
+    });
+
+    if (screens[screenName]) {
+      screens[screenName].classList.add('active');
+      state.currentScreen = screenName;
+      screens[screenName].scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+
+      // Special hooks per screen
+      if (screenName === 'home') {
+        clearUndoTimer();
+        renderRunningTotals();
+        renderQueueStatus();
+        renderRecentRemarks();
+        renderHomeQuickCategories();
+        renderRecentLedgerEntries();
+      } else if (screenName === 'amount') {
+        updateAmountDisplay();
+      } else if (screenName === 'category') {
+        renderCategories();
+      } else if (screenName === 'type') {
+        updateTypeSelectionUI();
+      } else if (screenName === 'remark') {
+        renderRecentRemarksChips();
+        if (remarkInput) remarkInput.value = state.entry.remark || '';
+      } else if (screenName === 'review') {
+        renderReviewScreen();
+      } else if (screenName === 'settings') {
+        populateSettingsUI();
+      }
+    }
+  }
+
+  function setupNavigation() {
+    // Primary "Log Expense" button on Home
+    const btnStartLog = document.getElementById('btn-start-log');
+    if (btnStartLog) {
+      btnStartLog.addEventListener('click', () => {
+        resetEntryState();
+        navigateTo('amount');
+      });
+    }
+
+    // Settings open/close
+    const btnOpenSettings = document.getElementById('btn-open-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    if (btnOpenSettings) {
+      btnOpenSettings.addEventListener('click', () => navigateTo('settings'));
+    }
+    if (btnCloseSettings) {
+      btnCloseSettings.addEventListener('click', () => navigateTo('home'));
+    }
+
+    // First run banner link to settings
+    const btnConfigureGas = document.getElementById('btn-configure-gas');
+    if (btnConfigureGas) {
+      btnConfigureGas.addEventListener('click', () => {
+        const banner = document.getElementById('first-run-banner');
+        if (banner) banner.style.display = 'none';
+        navigateTo('settings');
+      });
+    }
+
+    // Cancel / Back buttons
+    document.querySelectorAll('[data-back]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-back');
+        if (target) navigateTo(target);
+      });
+    });
+
+    // Step 1: Amount Next
+    const btnAmountNext = document.getElementById('btn-amount-next');
+    if (btnAmountNext) {
+      btnAmountNext.addEventListener('click', () => {
+        if (validateAmount()) {
+          navigateTo('category');
+        }
+      });
+    }
+
+    // Step 3: Type Next
+    const btnTypeNext = document.getElementById('btn-type-next');
+    if (btnTypeNext) {
+      btnTypeNext.addEventListener('click', () => {
+        // Expense is default if unchanged
+        if (!state.entry.type) {
+          state.entry.type = 'Expense';
+        }
+        navigateTo('remark');
+      });
+    }
+
+    // Step 4: Remark Next & Skip
+    const btnRemarkNext = document.getElementById('btn-remark-next');
+    const btnRemarkSkip = document.getElementById('btn-remark-skip');
+    if (btnRemarkNext) {
+      btnRemarkNext.addEventListener('click', () => {
+        state.entry.remark = (remarkInput.value || '').trim();
+        navigateTo('review');
+      });
+    }
+    if (btnRemarkSkip) {
+      btnRemarkSkip.addEventListener('click', () => {
+        state.entry.remark = '';
+        if (remarkInput) remarkInput.value = '';
+        navigateTo('review');
+      });
+    }
+
+    // Success: Done Button
+    const btnSuccessDone = document.getElementById('btn-success-done');
+    if (btnSuccessDone) {
+      btnSuccessDone.addEventListener('click', () => {
+        clearUndoTimer();
+        navigateTo('home');
+      });
+    }
+  }
+
+  function resetEntryState() {
+    state.entry = {
+      amount: '',
+      category: '',
+      type: 'Expense', // Crucial: Expense is always pre-selected default!
+      remark: ''
+    };
+    if (amountDisplay) amountDisplay.textContent = '0.00';
+    if (remarkInput) remarkInput.value = '';
+    const err = document.getElementById('amount-error-msg');
+    if (err) err.style.display = 'none';
+  }
+
+  // --- Step 1: Amount & Keypad ---
+  function setupKeypad() {
+    if (!keypadContainer) return;
+
+    keypadContainer.addEventListener('click', (e) => {
+      const target = e.target.closest('button[data-key]');
+      if (!target) return;
+
+      const key = target.getAttribute('data-key');
+      handleKeypadInput(key);
+    });
+
+    // Quick add preset buttons (+5, +10, +20, +50)
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const add = parseFloat(btn.getAttribute('data-add')) || 0;
+        let current = parseFloat(state.entry.amount) || 0;
+        let next = (current + add).toFixed(2);
+        // remove trailing zeroes if clean integer
+        if (next.endsWith('.00')) next = next.replace('.00', '');
+        state.entry.amount = next;
+        updateAmountDisplay();
+        vibrate(25);
+      });
+    });
+  }
+
+  function handleKeypadInput(key) {
+    let val = state.entry.amount;
+    vibrate(20);
+
+    if (key === 'backspace') {
+      val = val.slice(0, -1);
+    } else if (key === 'clear') {
+      val = '';
+    } else if (key === '.') {
+      if (!val.includes('.')) {
+        val = val ? val + '.' : '0.';
+      }
+    } else if (/^[0-9]$/.test(key)) {
+      // Don't allow more than 2 decimal places
+      if (val.includes('.')) {
+        const parts = val.split('.');
+        if (parts[1].length >= 2) return; // limit cents to 2 digits
+      }
+      // Prevent leading multiple zeroes
+      if (val === '0') {
+        val = key;
+      } else {
+        val += key;
+      }
+    }
+
+    state.entry.amount = val;
+    updateAmountDisplay();
+  }
+
+  function updateAmountDisplay() {
+    const settings = PocketStorage.getSettings();
+    const curr = settings.currency || '$';
+    const currencyPrefix = document.getElementById('amount-currency-symbol');
+    if (currencyPrefix) currencyPrefix.textContent = curr;
+
+    if (!state.entry.amount) {
+      amountDisplay.textContent = '0.00';
+      amountDisplay.classList.add('placeholder');
+    } else {
+      amountDisplay.textContent = state.entry.amount;
+      amountDisplay.classList.remove('placeholder');
+    }
+
+    // Clear error message if user starts typing
+    const err = document.getElementById('amount-error-msg');
+    if (err && parseFloat(state.entry.amount) > 0) {
+      err.style.display = 'none';
+    }
+  }
+
+  function validateAmount() {
+    const amt = parseFloat(state.entry.amount);
+    const err = document.getElementById('amount-error-msg');
+    if (!amt || isNaN(amt) || amt <= 0) {
+      if (err) {
+        err.textContent = 'Please enter an amount greater than 0.';
+        err.style.display = 'block';
+      }
+      if (amountDisplay) {
+        amountDisplay.parentElement.classList.add('shake-field');
+        setTimeout(() => amountDisplay.parentElement.classList.remove('shake-field'), 500);
+      }
+      vibrate([50, 50, 50]);
+      return false;
+    }
+    if (err) err.style.display = 'none';
+    return true;
+  }
+
+  // --- Step 2: Category Grid ---
+  function setupCategoryScreen() {
+    // Delegated click for category buttons
+    if (categoryGrid) {
+      categoryGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.category-btn');
+        if (!btn) return;
+
+        const category = btn.getAttribute('data-category');
+        selectCategory(category, btn);
+      });
+    }
+
+    // Quick Sync button in header of Step 2
+    const btnQuickSync = document.getElementById('btn-quick-sync-cats');
+    const syncToast = document.getElementById('category-sync-feedback');
+    if (btnQuickSync) {
+      btnQuickSync.addEventListener('click', async () => {
+        btnQuickSync.classList.add('loading');
+        btnQuickSync.disabled = true;
+        const textSpan = btnQuickSync.querySelector('.sync-text');
+        if (textSpan) textSpan.textContent = 'Syncing...';
+
+        const res = await PocketSync.fetchCategoriesFromSheet({ mode: 'smart' });
+
+        btnQuickSync.classList.remove('loading');
+        btnQuickSync.disabled = false;
+        if (textSpan) textSpan.textContent = 'Sync';
+
+        if (syncToast) {
+          syncToast.textContent = res.message;
+          syncToast.className = 'cat-sync-toast ' + (res.success ? 'success' : 'error');
+          syncToast.style.display = 'flex';
+          setTimeout(() => {
+            syncToast.style.display = 'none';
+          }, 4000);
+        }
+
+        if (res.success) {
+          renderCategories();
+          renderHomeQuickCategories();
+        }
+      });
+    }
+  }
+
+  function renderCategories() {
+    if (!categoryGrid) return;
+    const categories = PocketStorage.getCategories();
+    categoryGrid.innerHTML = '';
+
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'category-btn';
+      btn.setAttribute('data-category', cat);
+      btn.innerHTML = `<span class="cat-name">${escapeHtml(cat)}</span>`;
+
+      if (state.entry.category === cat) {
+        btn.classList.add('selected');
+      }
+
+      categoryGrid.appendChild(btn);
+    });
+  }
+
+  function selectCategory(category, btnElement) {
+    state.entry.category = category;
+    vibrate(30);
+
+    // Visual selection feedback
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+    if (btnElement) btnElement.classList.add('selected');
+
+    // Auto advance to Step 3 (Type)
+    setTimeout(() => {
+      navigateTo('type');
+    }, 140);
+  }
+
+  // --- Step 3: Type Selection ---
+  function setupTypeScreen() {
+    if (typeExpenseBtn) {
+      typeExpenseBtn.addEventListener('click', () => {
+        setType('Expense');
+      });
+    }
+
+    if (typeIncomeBtn) {
+      typeIncomeBtn.addEventListener('click', () => {
+        setType('Income');
+      });
+    }
+  }
+
+  function setType(type) {
+    state.entry.type = type;
+    updateTypeSelectionUI();
+    vibrate(30);
+  }
+
+  function updateTypeSelectionUI() {
+    // Expense is default if not set
+    if (!state.entry.type) {
+      state.entry.type = 'Expense';
+    }
+
+    if (state.entry.type === 'Expense') {
+      typeExpenseBtn.classList.add('active');
+      typeIncomeBtn.classList.remove('active');
+    } else {
+      typeIncomeBtn.classList.add('active');
+      typeExpenseBtn.classList.remove('active');
+    }
+  }
+
+  // --- Step 4: Remark / Description ---
+  function setupRemarkScreen() {
+    if (remarkInput) {
+      remarkInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          state.entry.remark = (remarkInput.value || '').trim();
+          navigateTo('review');
+        }
+      });
+    }
+  }
+
+  function renderRecentRemarksChips() {
+    const container = document.getElementById('recent-remarks-chips');
+    if (!container) return;
+
+    const recents = PocketStorage.getRecentRemarks();
+    container.innerHTML = '';
+
+    if (recents.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+    recents.forEach(item => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = item;
+      chip.addEventListener('click', () => {
+        if (remarkInput) {
+          remarkInput.value = item;
+          state.entry.remark = item;
+          vibrate(20);
+        }
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  // --- Step 5: Review & Send ---
+  function renderReviewScreen() {
+    const settings = PocketStorage.getSettings();
+    const curr = settings.currency || '$';
+    const amt = parseFloat(state.entry.amount) || 0;
+
+    if (reviewAmount) {
+      reviewAmount.textContent = curr + amt.toFixed(2);
+      if (state.entry.type === 'Expense') {
+        reviewAmount.className = 'receipt-amount expense';
+      } else {
+        reviewAmount.className = 'receipt-amount income';
+      }
+    }
+
+    if (reviewCategory) reviewCategory.textContent = state.entry.category || 'â€”';
+    if (reviewType) {
+      reviewType.textContent = (state.entry.type || 'Expense').toUpperCase();
+      reviewType.className = 'receipt-type-pill ' + (state.entry.type || 'expense').toLowerCase();
+    }
+    if (reviewRemark) {
+      reviewRemark.textContent = state.entry.remark ? state.entry.remark : '(none)';
+      if (!state.entry.remark) {
+        reviewRemark.classList.add('empty-remark');
+      } else {
+        reviewRemark.classList.remove('empty-remark');
+      }
+    }
+
+    const reviewDate = document.getElementById('review-date');
+    if (reviewDate) {
+      const d = new Date();
+      reviewDate.textContent = d.toLocaleDateString(undefined, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  }
+
+  function setupReviewAndSubmit() {
+    const btnConfirmSend = document.getElementById('btn-confirm-send');
+    if (btnConfirmSend) {
+      btnConfirmSend.addEventListener('click', () => {
+        submitEntryFlow();
+      });
+    }
+
+    // Edit individual fields from receipt
+    document.querySelectorAll('[data-edit-step]').forEach(el => {
+      el.addEventListener('click', () => {
+        const step = el.getAttribute('data-edit-step');
+        navigateTo(step);
+      });
+    });
+
+    // Undo button
+    if (undoButton) {
+      undoButton.addEventListener('click', () => {
+        handleUndo();
+      });
+    }
+  }
+
+  async function submitEntryFlow() {
+    const btn = document.getElementById('btn-confirm-send');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> <span>Logging to Ledger...</span>';
+    }
+
+    try {
+      const result = await PocketSync.submitEntry({
+        amount: state.entry.amount,
+        category: state.entry.category,
+        type: state.entry.type || 'Expense',
+        remark: state.entry.remark || ''
+      });
+
+      state.lastLoggedResult = result;
+      showSuccessScreen(result);
+      return result;
+    } catch (err) {
+      console.error('Submission error:', err);
+      const errRes = {
+        queued: true,
+        message: 'Could not connect. Saved offline to send later.'
+      };
+      showSuccessScreen(errRes);
+      return errRes;
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>CONFIRM &amp; LOG</span> <span class="send-icon">&#10003;</span>';
+      }
+    }
+  }
+
+  function showSuccessScreen(result) {
+    const isOffline = result.queued;
+    const settings = PocketStorage.getSettings();
+    const curr = settings.currency || '$';
+    const amt = (parseFloat(state.entry.amount) || 0).toFixed(2);
+
+    // Stamped badge
+    if (successStamp) {
+      if (isOffline) {
+        successStamp.textContent = 'QUEUED';
+        successStamp.className = 'stamp queued';
+      } else {
+        successStamp.textContent = 'LOGGED';
+        successStamp.className = 'stamp logged';
+      }
+    }
+
+    if (successMessage) {
+      successMessage.textContent = result.message || (isOffline ? 'Saved offline!' : 'Logged to Google Sheet!');
+    }
+
+    if (successRowInfo) {
+      if (!isOffline && result.data && result.data.row) {
+        successRowInfo.innerHTML = `Google Sheet <strong>Row #${result.data.row}</strong> &bull; ${curr}${amt} [${state.entry.type}]`;
+      } else if (isOffline) {
+        successRowInfo.innerHTML = `Pending in Offline Queue &bull; ${curr}${amt} [${state.entry.type}]`;
+      } else {
+        successRowInfo.textContent = `${curr}${amt} [${state.entry.type}] recorded.`;
+      }
+    }
+
+    // Audio / Haptic
+    vibrate([40, 50, 40]);
+
+    // Show screen
+    navigateTo('success');
+
+    // Start 5-second undo timer
+    startUndoTimer(result);
+  }
+
+  function startUndoTimer(result) {
+    clearUndoTimer();
+    state.undoSecondsLeft = 5;
+
+    if (undoContainer) undoContainer.style.display = 'block';
+    if (undoProgressBar) undoProgressBar.style.width = '100%';
+
+    const startTime = Date.now();
+    const duration = 5000;
+
+    state.undoTimerId = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, duration - elapsed);
+      const percent = (remaining / duration) * 100;
+
+      if (undoProgressBar) {
+        undoProgressBar.style.width = percent + '%';
+      }
+
+      if (remaining <= 0) {
+        clearUndoTimer();
+        if (undoContainer) undoContainer.style.display = 'none';
+      }
+    }, 50);
+  }
+
+  function clearUndoTimer() {
+    if (state.undoTimerId) {
+      clearInterval(state.undoTimerId);
+      state.undoTimerId = null;
+    }
+  }
+
+  async function handleUndo() {
+    clearUndoTimer();
+    if (undoButton) {
+      undoButton.disabled = true;
+      undoButton.textContent = 'Undoing...';
+    }
+
+    const result = state.lastLoggedResult;
+    let undone = false;
+
+    if (result && result.queued && result.entry) {
+      // Remove from offline queue
+      PocketStorage.dequeue(result.entry.id);
+      PocketStorage.removeLocalLog(result.entry.id);
+      undone = true;
+    } else if (result && result.data && result.data.row) {
+      // Attempt to call delete on Google Apps Script
+      const undoRes = await PocketSync.undoEntry(result.data.row);
+      undone = undoRes.success;
+    } else {
+      undone = true;
+    }
+
+    vibrate([60, 30, 60]);
+    alert('Entry was undone / removed.');
+    navigateTo('home');
+  }
+
+  // --- Running Totals & Recent Items ---
+  function renderRunningTotals() {
+    const settings = PocketStorage.getSettings();
+    const curr = settings.currency || '$';
+    const logs = PocketStorage.getLocalLog();
+
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const thisMonthStr = now.toISOString().slice(0, 7);
+
+    let todayExp = 0;
+    let monthExp = 0;
+
+    logs.forEach(item => {
+      if (item.type === 'Expense') {
+        const itemDate = (item.timestamp || '').slice(0, 10);
+        const itemMonth = (item.timestamp || '').slice(0, 7);
+        const amt = parseFloat(item.amount) || 0;
+
+        if (itemDate === todayStr) {
+          todayExp += amt;
+        }
+        if (itemMonth === thisMonthStr) {
+          monthExp += amt;
+        }
+      }
+    });
+
+    if (todayTotalEl) todayTotalEl.textContent = curr + todayExp.toFixed(2);
+    if (monthTotalEl) monthTotalEl.textContent = curr + monthExp.toFixed(2);
+  }
+
+  function renderRecentRemarks() {
+    const container = document.getElementById('home-frequent-chips');
+    if (!container) return;
+
+    const recents = PocketStorage.getRecentRemarks();
+    container.innerHTML = '';
+
+    if (recents.length === 0) {
+      const parent = document.getElementById('home-frequent-section');
+      if (parent) parent.style.display = 'none';
+      return;
+    }
+
+    const parent = document.getElementById('home-frequent-section');
+    if (parent) parent.style.display = 'block';
+
+    recents.forEach(desc => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = desc;
+      chip.addEventListener('click', () => {
+        resetEntryState();
+        state.entry.remark = desc;
+        navigateTo('amount');
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function renderHomeQuickCategories() {
+    const container = document.getElementById('home-quick-cats-container');
+    if (!container) return;
+    const cats = PocketStorage.getCategories();
+    container.innerHTML = '';
+    cats.slice(0, 6).forEach(cat => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-cat-btn';
+      btn.textContent = cat;
+      btn.addEventListener('click', () => {
+        resetEntryState();
+        state.entry.category = cat;
+        navigateTo('amount');
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderRecentLedgerEntries() {
+    const listEl = document.getElementById('home-recent-entries-list');
+    if (!listEl) return;
+    const logs = PocketStorage.getLocalLog();
+    const settings = PocketStorage.getSettings();
+    const curr = settings.currency || '$';
+
+    if (!logs || logs.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-ledger-box">
+          <div style="font-size: 2rem; margin-bottom: 6px;">&#129534;</div>
+          <div style="font-weight: 700; color: var(--ink-primary); font-size: 0.95rem;">Ledger is empty</div>
+          <div style="font-size: 0.82rem; color: var(--ink-secondary); margin-top: 4px;">
+            Tap <strong>LOG ENTRY</strong> or shake phone to record your first transaction!
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = '';
+    logs.slice(0, 8).forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'ledger-item-row';
+      const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const amt = (parseFloat(item.amount) || 0).toFixed(2);
+      const isExpense = item.type === 'Expense';
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <strong style="font-size: 0.95rem;">${escapeHtml(item.category)}</strong>
+            ${item.remark ? `<span style="color: var(--ink-secondary); font-size: 0.85rem; margin-left: 6px;">&bull; ${escapeHtml(item.remark)}</span>` : ''}
+          </div>
+          <span style="font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; color: ${isExpense ? 'var(--color-expense)' : 'var(--color-income)'};">
+            ${isExpense ? '-' : '+'}${curr}${amt}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--ink-muted); margin-top: 4px;">
+          <span>${timeStr} &bull; ${item.status === 'queued' ? '<span style="color: var(--accent-brass); font-weight: 700;">Queued Offline</span>' : (item.row ? 'Row #' + item.row : 'Google Sheet')}</span>
+          <span>${escapeHtml(item.type)}</span>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderQueueStatus() {
+    const queue = PocketStorage.getQueue();
+    const count = queue.length;
+
+    if (queueCountBadge) {
+      if (count > 0) {
+        queueCountBadge.textContent = count + ' queued';
+        queueCountBadge.style.display = 'inline-flex';
+      } else {
+        queueCountBadge.style.display = 'none';
+      }
+    }
+
+    // Update settings screen queue list if open
+    if (state.currentScreen === 'settings') {
+      renderSettingsQueueList();
+    }
+  }
+
+  // --- Settings Screen ---
+  function setupSettingsScreen() {
+    const inputUrl = document.getElementById('setting-gas-url');
+    const btnSaveUrl = document.getElementById('btn-save-gas-url');
+    const btnTestGas = document.getElementById('btn-test-gas-connection');
+    const urlStatus = document.getElementById('gas-url-status');
+
+    if (btnSaveUrl) {
+      btnSaveUrl.addEventListener('click', () => {
+        const val = (inputUrl.value || '').trim();
+        PocketStorage.setGasUrl(val);
+        if (urlStatus) {
+          urlStatus.textContent = 'Saved!';
+          urlStatus.className = 'status-msg success';
+          setTimeout(() => { urlStatus.textContent = ''; }, 3000);
+        }
+      });
+    }
+
+    if (btnTestGas) {
+      btnTestGas.addEventListener('click', async () => {
+        const url = (inputUrl.value || '').trim();
+        if (!url) {
+          if (urlStatus) {
+            urlStatus.textContent = 'Please enter a URL first.';
+            urlStatus.className = 'status-msg error';
+          }
+          return;
+        }
+
+        btnTestGas.disabled = true;
+        btnTestGas.textContent = 'Testing...';
+        if (urlStatus) {
+          urlStatus.textContent = 'Contacting Apps Script endpoint...';
+          urlStatus.className = 'status-msg info';
+        }
+
+        try {
+          const res = await PocketSync.fetchCategoriesFromSheet();
+          if (res.success) {
+            urlStatus.textContent = `Connected! ${res.message}`;
+            urlStatus.className = 'status-msg success';
+            renderSettingsCategories();
+            renderCategories();
+          } else {
+            urlStatus.textContent = res.message;
+            urlStatus.className = 'status-msg error';
+          }
+        } catch (e) {
+          urlStatus.textContent = 'Connection failed: ' + e.message;
+          urlStatus.className = 'status-msg error';
+        } finally {
+          btnTestGas.disabled = false;
+          btnTestGas.textContent = 'Test Connection';
+        }
+      });
+    }
+
+    // Category additions
+    const btnAddCat = document.getElementById('btn-add-category');
+    const inputNewCat = document.getElementById('input-new-category');
+    if (btnAddCat && inputNewCat) {
+      btnAddCat.addEventListener('click', () => {
+        const name = (inputNewCat.value || '').trim();
+        if (name) {
+          const success = PocketStorage.addCategory(name);
+          if (success) {
+            inputNewCat.value = '';
+            renderSettingsCategories();
+            renderCategories();
+          } else {
+            alert('Category already exists or is invalid.');
+          }
+        }
+      });
+
+      inputNewCat.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnAddCat.click();
+        }
+      });
+    }
+
+    // Sync categories from sheet button (Smart Sync)
+    const btnSyncCategories = document.getElementById('btn-sync-categories');
+    const btnReplaceCategories = document.getElementById('btn-replace-categories');
+    const syncCatStatus = document.getElementById('sync-categories-status');
+
+    if (btnSyncCategories) {
+      btnSyncCategories.addEventListener('click', async () => {
+        btnSyncCategories.disabled = true;
+        btnSyncCategories.textContent = 'Syncing...';
+        if (syncCatStatus) {
+          syncCatStatus.textContent = 'Fetching and syncing categories from Google Sheet...';
+          syncCatStatus.className = 'status-msg info';
+        }
+
+        const res = await PocketSync.fetchCategoriesFromSheet({ mode: 'smart' });
+        if (syncCatStatus) {
+          syncCatStatus.textContent = res.message;
+          syncCatStatus.className = 'status-msg ' + (res.success ? 'success' : 'error');
+        }
+
+        btnSyncCategories.disabled = false;
+        btnSyncCategories.textContent = 'Sync from Sheet';
+
+        if (res.success) {
+          renderSettingsCategories();
+          renderCategories();
+          renderHomeQuickCategories();
+        }
+      });
+    }
+
+    // Match Sheet 1:1 button (Strict Replace)
+    if (btnReplaceCategories) {
+      btnReplaceCategories.addEventListener('click', async () => {
+        if (!confirm('Replace all categories to exactly match your Google Sheet?')) {
+          return;
+        }
+
+        btnReplaceCategories.disabled = true;
+        btnReplaceCategories.textContent = 'Updating...';
+        if (syncCatStatus) {
+          syncCatStatus.textContent = 'Fetching and matching Google Sheet categories...';
+          syncCatStatus.className = 'status-msg info';
+        }
+
+        const res = await PocketSync.fetchCategoriesFromSheet({ mode: 'replace' });
+        if (syncCatStatus) {
+          syncCatStatus.textContent = res.message;
+          syncCatStatus.className = 'status-msg ' + (res.success ? 'success' : 'error');
+        }
+
+        btnReplaceCategories.disabled = false;
+        btnReplaceCategories.textContent = 'Match Sheet 1:1';
+
+        if (res.success) {
+          renderSettingsCategories();
+          renderCategories();
+          renderHomeQuickCategories();
+        }
+      });
+    }
+
+    // Reset categories to default
+    const btnResetCategories = document.getElementById('btn-reset-categories');
+    if (btnResetCategories) {
+      btnResetCategories.addEventListener('click', () => {
+        if (confirm('Reset categories to the default 8 items?')) {
+          PocketStorage.resetCategoriesToDefault();
+          renderSettingsCategories();
+          renderCategories();
+          renderHomeQuickCategories();
+          if (syncCatStatus) {
+            syncCatStatus.textContent = 'Reset to default 8 categories.';
+            syncCatStatus.className = 'status-msg info';
+          }
+        }
+      });
+    }
+
+    // Offline queue controls in settings
+    const btnRetryQueue = document.getElementById('btn-retry-queue');
+    const btnClearQueue = document.getElementById('btn-clear-queue');
+    const queueActionStatus = document.getElementById('queue-action-status');
+
+    if (btnRetryQueue) {
+      btnRetryQueue.addEventListener('click', async () => {
+        btnRetryQueue.disabled = true;
+        btnRetryQueue.textContent = 'Sending...';
+        if (queueActionStatus) {
+          queueActionStatus.textContent = 'Retrying queued items...';
+          queueActionStatus.className = 'status-msg info';
+        }
+
+        const res = await PocketSync.processQueue();
+        if (queueActionStatus) {
+          if (res.error) {
+            queueActionStatus.textContent = 'Error: ' + res.error;
+            queueActionStatus.className = 'status-msg error';
+          } else {
+            queueActionStatus.textContent = `Synced: ${res.successCount}, Remaining: ${res.remaining}`;
+            queueActionStatus.className = 'status-msg ' + (res.remaining === 0 ? 'success' : 'info');
+          }
+        }
+
+        btnRetryQueue.disabled = false;
+        btnRetryQueue.textContent = 'Retry Sending Queue';
+        renderSettingsQueueList();
+      });
+    }
+
+    if (btnClearQueue) {
+      btnClearQueue.addEventListener('click', () => {
+        if (confirm('Clear all queued offline entries without sending?')) {
+          PocketStorage.clearQueue();
+          renderSettingsQueueList();
+        }
+      });
+    }
+
+    // Currency selector
+    const currencySelect = document.getElementById('setting-currency');
+    if (currencySelect) {
+      currencySelect.addEventListener('change', (e) => {
+        PocketStorage.updateSettings({ currency: e.target.value });
+        renderRunningTotals();
+      });
+    }
+
+    // Shake sensitivity selector
+    const shakeSelect = document.getElementById('setting-shake-sensitivity');
+    if (shakeSelect) {
+      shakeSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'off') {
+          PocketStorage.updateSettings({ shakeEnabled: false });
+        } else {
+          PocketStorage.updateSettings({ shakeEnabled: true, shakeSensitivity: val });
+        }
+      });
+    }
+
+    // Live shake monitor and test trigger
+    const shakeValEl = document.getElementById('shake-live-val');
+    const shakeBarEl = document.getElementById('shake-live-bar');
+    const shakeStatusEl = document.getElementById('shake-live-status');
+    const btnTestShake = document.getElementById('btn-test-shake-action');
+
+    if (window.PocketMotion) {
+      PocketMotion.onMotionSample = (delta) => {
+        if (state.currentScreen === 'settings' && shakeValEl && shakeBarEl) {
+          shakeValEl.textContent = delta.toFixed(1) + ' m/sÂ²';
+          const pct = Math.min(100, (delta / 25) * 100);
+          shakeBarEl.style.width = pct + '%';
+        }
+      };
+
+      if (PocketMotion.insecureContext && shakeStatusEl) {
+        shakeStatusEl.innerHTML = '<strong style="color:var(--color-expense);">âš ï¸ Blocked by HTTP:</strong> Chrome requires HTTPS for motion sensors. Once hosted on HTTPS, shake activates automatically!';
+      }
+    }
+
+    if (btnTestShake) {
+      btnTestShake.addEventListener('click', () => {
+        PocketMotion.simulateShake();
+      });
+    }
+  }
+
+  function populateSettingsUI() {
+    const inputUrl = document.getElementById('setting-gas-url');
+    if (inputUrl) inputUrl.value = PocketStorage.getGasUrl();
+
+    const settings = PocketStorage.getSettings();
+    const currencySelect = document.getElementById('setting-currency');
+    if (currencySelect) currencySelect.value = settings.currency || '$';
+
+    const shakeSelect = document.getElementById('setting-shake-sensitivity');
+    if (shakeSelect) {
+      shakeSelect.value = settings.shakeEnabled ? (settings.shakeSensitivity || 'medium') : 'off';
+    }
+
+    renderSettingsCategories();
+    renderSettingsQueueList();
+  }
+
+  function renderSettingsCategories() {
+    const list = document.getElementById('settings-categories-list');
+    if (!list) return;
+
+    const categories = PocketStorage.getCategories();
+    const countBadge = document.getElementById('settings-cat-count');
+    if (countBadge) countBadge.textContent = categories.length;
+
+    list.innerHTML = '';
+
+    categories.forEach((cat, idx) => {
+      const item = document.createElement('div');
+      item.className = 'settings-cat-row';
+      item.innerHTML = `
+        <span class="cat-label">${escapeHtml(cat)}</span>
+        <div class="cat-actions">
+          <button type="button" class="btn-icon btn-move-up" data-idx="${idx}" title="Move Up" ${idx === 0 ? 'disabled' : ''}>&uarr;</button>
+          <button type="button" class="btn-icon btn-move-down" data-idx="${idx}" title="Move Down" ${idx === categories.length - 1 ? 'disabled' : ''}>&darr;</button>
+          <button type="button" class="btn-icon btn-delete" data-cat="${escapeHtml(cat)}" title="Delete">&#10005;</button>
+        </div>
+      `;
+
+      // Button handlers
+      item.querySelector('.btn-move-up').addEventListener('click', () => {
+        PocketStorage.moveCategory(idx, idx - 1);
+        renderSettingsCategories();
+        renderCategories();
+      });
+
+      item.querySelector('.btn-move-down').addEventListener('click', () => {
+        PocketStorage.moveCategory(idx, idx + 1);
+        renderSettingsCategories();
+        renderCategories();
+      });
+
+      item.querySelector('.btn-delete').addEventListener('click', () => {
+        PocketStorage.removeCategory(cat);
+        renderSettingsCategories();
+        renderCategories();
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderSettingsQueueList() {
+    const container = document.getElementById('settings-queue-list');
+    const badge = document.getElementById('settings-queue-count');
+    if (!container) return;
+
+    const queue = PocketStorage.getQueue();
+    if (badge) badge.textContent = queue.length;
+
+    container.innerHTML = '';
+
+    if (queue.length === 0) {
+      container.innerHTML = '<div class="queue-empty-msg">No pending entries. All caught up!</div>';
+      return;
+    }
+
+    queue.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'queue-item-card';
+      const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      card.innerHTML = `
+        <div class="queue-card-top">
+          <span class="queue-card-amt ${item.type.toLowerCase()}">${escapeHtml(item.type)} â€¢ $${parseFloat(item.amount).toFixed(2)}</span>
+          <span class="queue-card-cat">${escapeHtml(item.category)}</span>
+        </div>
+        <div class="queue-card-bottom">
+          <span class="queue-card-remark">${item.remark ? escapeHtml(item.remark) : '<em>No remark</em>'}</span>
+          <span class="queue-card-time">${timeStr} (Retries: ${item.retries || 0})</span>
+        </div>
+        ${item.lastError ? `<div class="queue-card-error">${escapeHtml(item.lastError)}</div>` : ''}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // --- Shake Detection Integration ---
+  function setupShakeListener() {
+    window.addEventListener('pl:shake-detected', () => {
+      // Only initiate new log if on home or success screen
+      if (state.currentScreen === 'home' || state.currentScreen === 'success') {
+        console.log('Physical shake detected! Opening amount entry...');
+        resetEntryState();
+        navigateTo('amount');
+      }
+    });
+  }
+
+  // --- Storage & Sync Event Listeners ---
+  function setupStorageListeners() {
+    window.addEventListener('pl:queue-changed', () => {
+      renderQueueStatus();
+    });
+
+    window.addEventListener('pl:log-changed', () => {
+      renderRunningTotals();
+      renderRecentLedgerEntries();
+    });
+
+    window.addEventListener('pl:recent-remarks-changed', () => {
+      renderRecentRemarks();
+    });
+
+    window.addEventListener('pl:categories-changed', () => {
+      renderCategories();
+      renderHomeQuickCategories();
+    });
+  }
+
+  // --- Helpers ---
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function vibrate(pattern) {
+    if (navigator.vibrate && PocketStorage.getSettings().haptics) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  }
+
+  // Expose test hooks for automated verification
+  window.PocketApp = {
+    state,
+    navigateTo,
+    resetEntryState,
+    handleKeypadInput,
+    validateAmount,
+    selectCategory,
+    setType,
+    submitEntryFlow,
+    handleUndo
+  };
+
+  // Launch on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+  </script>
+
+  <!-- PWA Installation & Service Worker -->
+  <script>
+    let deferredInstallPrompt = null;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    function updateInstallUI(available, installed) {
+      const banner = document.getElementById('pwa-install-banner');
+      const settingsInstallBtn = document.getElementById('btn-settings-install');
+      const settingsInstallStatus = document.getElementById('settings-pwa-status');
+      const settingsBadge = document.getElementById('settings-pwa-badge');
+
+      if (installed || isStandalone) {
+        if (banner) banner.style.display = 'none';
+        if (settingsInstallStatus) settingsInstallStatus.textContent = 'Installed as Native PWA (Standalone Mode).';
+        if (settingsInstallBtn) {
+          settingsInstallBtn.innerHTML = '&#10003; Already Installed';
+          settingsInstallBtn.disabled = true;
+          settingsInstallBtn.style.opacity = '0.7';
+        }
+        if (settingsBadge) {
+          settingsBadge.textContent = 'INSTALLED';
+          settingsBadge.className = 'status-pill online';
+        }
+      } else {
+        if (banner && !sessionStorage.getItem('pwa_banner_dismissed')) {
+          banner.style.display = 'flex';
+        }
+        if (settingsInstallStatus) {
+          settingsInstallStatus.textContent = 'Running in browser. Install to your Samsung Galaxy S24 home screen to enable full-screen view and quick shake access.';
+        }
+        if (settingsInstallBtn) {
+          settingsInstallBtn.innerHTML = '&#128242; Install App to Home Screen';
+          settingsInstallBtn.disabled = false;
+        }
+      }
+    }
+
+    async function triggerInstallFlow() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        try {
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          console.log('[PWA] Prompt choice:', outcome);
+          if (outcome === 'accepted') {
+            deferredInstallPrompt = null;
+            updateInstallUI(false, true);
+          }
+        } catch (e) {
+          console.warn('[PWA] Error awaiting prompt choice:', e);
+        }
+      } else {
+        showInstallGuide();
+      }
+    }
+
+    function showInstallGuide() {
+      const modal = document.getElementById('modal-install-guide');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function hideInstallGuide() {
+      const modal = document.getElementById('modal-install-guide');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Capture native install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      console.log('[PWA] beforeinstallprompt captured successfully');
+      updateInstallUI(true, false);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App installed successfully');
+      deferredInstallPrompt = null;
+      updateInstallUI(false, true);
+    });
+
+    // Wire up buttons on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      updateInstallUI(false, isStandalone);
+
+      const headerInstallBtn = document.getElementById('btn-header-install');
+      if (headerInstallBtn) headerInstallBtn.addEventListener('click', triggerInstallFlow);
+
+      const bannerInstallBtn = document.getElementById('btn-banner-install');
+      if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', triggerInstallFlow);
+
+      const bannerDismissBtn = document.getElementById('btn-banner-dismiss');
+      if (bannerDismissBtn) {
+        bannerDismissBtn.addEventListener('click', () => {
+          const banner = document.getElementById('pwa-install-banner');
+          if (banner) banner.style.display = 'none';
+          sessionStorage.setItem('pwa_banner_dismissed', 'true');
+        });
+      }
+
+      const settingsInstallBtn = document.getElementById('btn-settings-install');
+      if (settingsInstallBtn) settingsInstallBtn.addEventListener('click', triggerInstallFlow);
+
+      const closeModalBtn = document.getElementById('btn-close-install-modal');
+      if (closeModalBtn) closeModalBtn.addEventListener('click', hideInstallGuide);
+
+      const modalGotItBtn = document.getElementById('btn-modal-got-it');
+      if (modalGotItBtn) modalGotItBtn.addEventListener('click', hideInstallGuide);
+
+      const tabSamsung = document.getElementById('tab-btn-samsung');
+      const tabChrome = document.getElementById('tab-btn-chrome');
+      const contentSamsung = document.getElementById('tab-content-samsung');
+      const contentChrome = document.getElementById('tab-content-chrome');
+
+      if (tabSamsung && tabChrome && contentSamsung && contentChrome) {
+        tabSamsung.addEventListener('click', () => {
+          tabSamsung.classList.add('active');
+          tabChrome.classList.remove('active');
+          contentSamsung.style.display = 'block';
+          contentChrome.style.display = 'none';
+        });
+
+        tabChrome.addEventListener('click', () => {
+          tabChrome.classList.add('active');
+          tabSamsung.classList.remove('active');
+          contentChrome.style.display = 'block';
+          contentSamsung.style.display = 'none';
+        });
+      }
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(reg => {
+            console.log('[PWA] Service Worker registered:', reg.scope);
+            if (reg.update) reg.update();
+          })
+          .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
